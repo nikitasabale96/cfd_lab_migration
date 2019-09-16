@@ -242,7 +242,6 @@ function lab_migration_proposal_form($form, &$form_state)
             $namefield = "lab_experiment-" . $counter;
             $form['lab_experiment_description-' . $counter] = array(
                 '#type' => 'textarea',
-                '#required' => TRUE,
                 '#attributes' => array(
                     'placeholder' => t('Enter Description for your experiment ' . $counter),
                     'cols' => 50,
