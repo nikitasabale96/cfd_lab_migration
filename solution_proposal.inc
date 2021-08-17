@@ -184,7 +184,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['all_state'] = array(
         '#type' => 'select',
         '#title' => t('State'),
-        '#options' => _list_of_states(),
+        '#options' => _lm_list_of_states(),
         '#validated' => TRUE,
         '#states' => array(
             'visible' => array(
@@ -197,7 +197,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['city'] = array(
         '#type' => 'select',
         '#title' => t('City'),
-        '#options' => _list_of_cities(),
+        '#options' => _lm_list_of_cities(),
         '#states' => array(
             'visible' => array(
                 ':input[name="country"]' => array(
@@ -219,7 +219,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['version'] = array(
         '#type' => 'select',
         '#title' => t('Version'),
-        '#options' => _list_of_software_version(),
+        '#options' => _lm_list_of_software_version(),
         '#required' => TRUE
     );
     $form['older'] = array(
@@ -390,42 +390,3 @@ function lab_migration_solution_proposal_form_submit($form, &$form_state)
     drupal_goto('lab-migration/open-proposal');
   }
 
-function _list_of_states()
-  {
-    $states = array(0 => '-Select-');
-    $query = db_select('list_states_of_india');
-    $query->fields('list_states_of_india');
-    //$query->orderBy('', '');
-    $states_list = $query->execute();
-    while ($states_list_data = $states_list->fetchObject())
-      {
-        $states[$states_list_data->state] = $states_list_data->state;
-      }
-    return $states;
-  }
-function _list_of_cities()
-  {
-    $city = array(0 => '-Select-');
-    $query = db_select('list_cities_of_india');
-    $query->fields('list_cities_of_india');
-    $query->orderBy('city', 'ASC');
-    $city_list = $query->execute();
-    while ($city_list_data = $city_list->fetchObject())
-      {
-        $city[$city_list_data->city] = $city_list_data->city;
-      }
-    return $city;
-  }
-function _list_of_departments()
-  {
-    $department = array();
-    $query = db_select('list_of_departments');
-    $query->fields('list_of_departments');
-    $query->orderBy('id', 'DESC');
-    $department_list = $query->execute();
-    while ($department_list_data = $department_list->fetchObject())
-      {
-        $department[$department_list_data->department] = $department_list_data->department;
-      }
-    return $department;
-  }
