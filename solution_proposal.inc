@@ -198,6 +198,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
         '#type' => 'select',
         '#title' => t('City'),
         '#options' => lm_list_of_cities(),
+        '#validated' => TRUE,
         '#states' => array(
             'visible' => array(
                 ':input[name="country"]' => array(
@@ -426,7 +427,6 @@ function lm_list_of_cities()
     $states = array(
         0 => '-Select-'
     );
-    $city = array();
     $query = db_select('list_cities_of_india');
     $query->fields('list_cities_of_india');
     $query->orderBy('city', 'ASC');
