@@ -389,4 +389,3 @@ function lab_migration_solution_proposal_form_submit($form, &$form_state)
     drupal_set_message('Error sending email message.', 'error');*/
     drupal_goto('lab-migration/open-proposal');
   }
-

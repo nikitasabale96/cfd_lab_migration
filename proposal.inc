@@ -526,7 +526,7 @@ function lab_migration_proposal_form_submit($form, &$form_state)
     drupal_set_message(t('We have received you Lab migration proposal. We will get back to you soon.'), 'status');
     drupal_goto('');
   }
-function _lm_list_of_states()
+/*function _lm_list_of_states()
   {
     $states = array(0 => '-Select-');
     $query = db_select('list_states_of_india');
@@ -538,8 +538,8 @@ function _lm_list_of_states()
         $states[$states_list_data->state] = $states_list_data->state;
       }
     return $states;
-  }
-function _lm_list_of_cities()
+  }*/
+/*function _lm_list_of_cities()
   {
     $city = array(0 => '-Select-');
     $query = db_select('list_cities_of_india');
@@ -564,8 +564,8 @@ function _lm_list_of_departments()
         $department[$department_list_data->department] = $department_list_data->department;
       }
     return $department;
-  }
-function _lm_list_of_software_version()
+  }*/
+/*function _lm_list_of_software_version()
   {
     $software_version = array();
     $query = db_select('openfoam_software_version');
@@ -577,7 +577,7 @@ function _lm_list_of_software_version()
         $software_version[$software_version_list_data->openfoam_version] = $software_version_list_data->openfoam_version;
       }
     return $software_version;
-  }
+  }*/
 function _lm_dir_name($lab, $name, $university)
   {
     $lab_title = ucname($lab);
