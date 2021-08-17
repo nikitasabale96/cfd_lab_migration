@@ -423,6 +423,9 @@ function lm_list_of_states()
   }
 function lm_list_of_cities()
   {
+    $states = array(
+        0 => '-Select-'
+    );
     $city = array();
     $query = db_select('list_cities_of_india');
     $query->fields('list_cities_of_india');
