@@ -115,7 +115,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['solution_provider_department'] = array(
         '#type' => 'select',
         '#title' => t('Department/Branch'),
-        '#options' => _list_of_departments(),
+        '#options' => _lm_list_of_departments(),
         '#required' => TRUE
     );
     $form['solution_provider_university'] = array(
