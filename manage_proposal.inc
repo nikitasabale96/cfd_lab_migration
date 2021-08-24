@@ -1390,7 +1390,7 @@ function lab_migration_category_edit_form_submit($form, &$form_state)
     drupal_set_message(t('Proposal Category Updated'), 'status');
     drupal_goto('lab-migration/manage-proposal/category');
   }
-function _lm_list_of_departments()
+/*function _lm_list_of_departments()
   {
     $department = array(
         0 => '-Select-'
@@ -1447,7 +1447,7 @@ function _lm_list_of_cities()
         $city[$city_list_data->city] = $city_list_data->city;
       }
     return $city;
-  }
+  }*/
 function CreateReadmeFileLabMigration($proposal_id)
   {
     $result = db_query("
@@ -1515,12 +1515,4 @@ return;
       }*/
     return ;
   }
-function _lm_dir_name($lab, $name, $university)
-  {
-    $lab_title = ucname($lab);
-    $proposar_name = ucname($name);
-    $university_name = ucname($university);
-    $dir_name = $lab_title . " " . "by" . " " . $proposar_name . ' ' . $university_name;
-    $directory_name = str_replace("__", "_", str_replace(" ", "_", $dir_name));
-    return $directory_name;
-  }
+

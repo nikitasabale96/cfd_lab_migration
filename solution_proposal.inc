@@ -115,7 +115,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['solution_provider_department'] = array(
         '#type' => 'select',
         '#title' => t('Department/Branch'),
-        '#options' => lm_list_of_departments(),
+        '#options' => _lm_list_of_departments(),
         '#required' => TRUE
     );
     $form['solution_provider_university'] = array(
@@ -184,7 +184,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['all_state'] = array(
         '#type' => 'select',
         '#title' => t('State'),
-        '#options' => lm_list_of_states(),
+        '#options' => _lm_list_of_states(),
         '#validated' => TRUE,
         '#states' => array(
             'visible' => array(
@@ -197,7 +197,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
     $form['city'] = array(
         '#type' => 'select',
         '#title' => t('City'),
-        '#options' => lm_list_of_cities(),
+        '#options' => _lm_list_of_cities(),
         '#validated' => TRUE,
         '#states' => array(
             'visible' => array(
@@ -217,10 +217,10 @@ function lab_migration_solution_proposal_form($form, $form_state)
             'placeholder' => 'Enter pincode....'
         )
     );
-    $form['version'] = array(
+    /*$form['version'] = array(
         '#type' => 'select',
         '#title' => t('Version'),
-        '#options' => lm_list_of_software_version(),
+        '#options' => _lm_list_of_software_version(),
         '#required' => TRUE
     );
     $form['older'] = array(
@@ -236,7 +236,7 @@ function lab_migration_solution_proposal_form($form, $form_state)
                 )
             )
         )
-    );
+    );*/
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Apply for Solution')
@@ -347,7 +347,7 @@ function lab_migration_solution_proposal_form_submit($form, &$form_state)
         drupal_set_message("Someone has already applied for solving this Lab.", 'error');
         drupal_goto('lab-migration/open-proposal');
       }
-    $query = "UPDATE {lab_migration_proposal} set solution_provider_uid = :uid, solution_status = 1, solution_provider_name_title = :solution_provider_name_title, solution_provider_name = :solution_provider_contact_name, solution_provider_contact_ph = :solution_provider_contact_ph, solution_provider_department = :solution_provider_department, solution_provider_university = :solution_provider_university , solution_provider_city = :solution_provider_city, solution_provider_pincode = :solution_provider_pincode, solution_provider_state = :solution_provider_state,solution_provider_country = :solution_provider_country, version = :version WHERE id = :proposal_id";
+    $query = "UPDATE {lab_migration_proposal} set solution_provider_uid = :uid, solution_status = 1, solution_provider_name_title = :solution_provider_name_title, solution_provider_name = :solution_provider_contact_name, solution_provider_contact_ph = :solution_provider_contact_ph, solution_provider_department = :solution_provider_department, solution_provider_university = :solution_provider_university , solution_provider_city = :solution_provider_city, solution_provider_pincode = :solution_provider_pincode, solution_provider_state = :solution_provider_state,solution_provider_country = :solution_provider_country WHERE id = :proposal_id";
     $args = array(
         ":uid" => $user->uid,
         ":solution_provider_name_title" => $form_state['values']['solution_provider_name_title'],
@@ -359,7 +359,6 @@ function lab_migration_solution_proposal_form_submit($form, &$form_state)
         ":solution_provider_pincode" => $form_state['values']['pincode'],
         ":solution_provider_state" => $form_state['values']['all_state'],
         ":solution_provider_country" => $form_state['values']['country'],
-        ":version" => $form_state['values']['version'],
         
         ":proposal_id" => $proposal_id
     );
@@ -389,64 +388,4 @@ function lab_migration_solution_proposal_form_submit($form, &$form_state)
     if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to , language_default(), $param, variable_get('lab_migration_from_email', NULL), TRUE))
     drupal_set_message('Error sending email message.', 'error');*/
     drupal_goto('lab-migration/open-proposal');
-  }
-
-
-function lm_list_of_departments()
-  {
-    $department = array(
-        0 => '-Select-'
-    );
-    $query = db_select('list_of_departments');
-    $query->fields('list_of_departments');
-    $query->orderBy('id', 'DESC');
-    $department_list = $query->execute();
-    while ($department_list_data = $department_list->fetchObject())
-      {
-        $department[$department_list_data->department] = $department_list_data->department;
-      }
-    return $department;
-  }
-function lm_list_of_states()
-  {
-    $states = array(
-        0 => '-Select-'
-    );
-    $query = db_select('list_states_of_india');
-    $query->fields('list_states_of_india');
-    //$query->orderBy('', '');
-    $states_list = $query->execute();
-    while ($states_list_data = $states_list->fetchObject())
-      {
-        $states[$states_list_data->state] = $states_list_data->state;
-      }
-    return $states;
-  }
-function lm_list_of_cities()
-  {
-    $states = array(
-        0 => '-Select-'
-    );
-    $query = db_select('list_cities_of_india');
-    $query->fields('list_cities_of_india');
-    $query->orderBy('city', 'ASC');
-    $city_list = $query->execute();
-    while ($city_list_data = $city_list->fetchObject())
-      {
-        $city[$city_list_data->city] = $city_list_data->city;
-      }
-    return $city;
-  }
-  function lm_list_of_software_version()
-  {
-    $software_version = array();
-    $query = db_select('openfoam_software_version');
-    $query->fields('openfoam_software_version');
-    $query->orderBy('id', 'ASC');
-    $software_version_list = $query->execute();
-    while ($software_version_list_data = $software_version_list->fetchObject())
-      {
-        $software_version[$software_version_list_data->version] = $software_version_list_data->version;
-      }
-    return $software_version;
   }

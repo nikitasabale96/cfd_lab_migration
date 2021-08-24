@@ -63,7 +63,7 @@ State : ' . $proposal_data->solution_provider_state . '
 
 List of experiments : ' . $experiment_list . '
 
-Please ensure that ALL the codes follow guidelines at http://cfd.fossee.in/lab-migration/lab-migration-guidelines
+Please ensure that ALL the codes follow guidelines at https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
@@ -394,7 +394,7 @@ Solution Provided By : ' . $solution_provider_user . '
 List of experiments : ' . $experiment_list . '
 
 Please ensure that ALL the guidelines for coding are strictly followed:
-http://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,
 
@@ -482,11 +482,11 @@ List of experiments : ' . $experiment_list . '
 
 Your Lab solution is now available at following link to download.
 
-http://cfd.fossee.in/lab-migration/lab-migration-run/' . $proposal_data->id . '
+https://cfd.fossee.in/lab-migration/lab-migration-run/' . $proposal_data->id . '
 
 Now you should be able to propose a new Lab migration.
 
-Please ensure that ALL the codes follow guidelines at http://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
+Please ensure that ALL the codes follow guidelines at https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,
 
@@ -554,7 +554,7 @@ University/Institute : ' . $proposal_data->solution_provider_university . '
 
 Your proposal is under review. You will soon receive an email when the same has been approved / disapproved.
 
-Please ensure that ALL the codes follow guidelines at http://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
+Please ensure that ALL the codes follow guidelines at https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,
 
@@ -644,7 +644,7 @@ Experiment Title : ' . $experiment_data->title . '
 Solution number : ' . $solution_data->code_number . '
 Caption : ' . $solution_data->caption . '
 
-Please ensure that ALL the codes follow guidelines at http://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
+Please ensure that ALL the codes follow guidelines at https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,
 
@@ -736,7 +736,7 @@ Dear !user_name,
 You have uploaded following dependency files :
     ' . $dependency_files . '
 
-Please ensure that ALL the codes follow guidelines at http://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
+Please ensure that ALL the codes follow guidelines at https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,
 
