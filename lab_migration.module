@@ -1,5 +1,8 @@
 <?php
 // $Id$
+error_reporting(E_ALL);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
 require_once('general_deletion.inc');
 require_once('email.inc');
 /**
@@ -760,5 +763,66 @@ function ucname($string)
     return $string;
   }
  
- 
- 
+ function _lm_list_of_states()
+  {
+    $states = array(0 => '-Select-');
+    $query = db_select('list_states_of_india');
+    $query->fields('list_states_of_india');
+    //$query->orderBy('', '');
+    $states_list = $query->execute();
+    while ($states_list_data = $states_list->fetchObject())
+      {
+        $states[$states_list_data->state] = $states_list_data->state;
+      }
+    return $states;
+  }
+function _lm_list_of_cities()
+  {
+    $city = array(0 => '-Select-');
+    $query = db_select('list_cities_of_india');
+    $query->fields('list_cities_of_india');
+    $query->orderBy('city', 'ASC');
+    $city_list = $query->execute();
+    while ($city_list_data = $city_list->fetchObject())
+      {
+        $city[$city_list_data->city] = $city_list_data->city;
+      }
+    return $city;
+  }
+function _lm_list_of_departments()
+  {
+    $department = array();
+    $query = db_select('list_of_departments');
+    $query->fields('list_of_departments');
+    $query->orderBy('id', 'DESC');
+    $department_list = $query->execute();
+    while ($department_list_data = $department_list->fetchObject())
+      {
+        $department[$department_list_data->department] = $department_list_data->department;
+      }
+    return $department;
+  }
+function _lm_list_of_software_version()
+  {
+    $software_version = array();
+    $query = db_select('openfoam_software_version');
+    $query->fields('openfoam_software_version');
+    $query->orderBy('id', 'DESC');
+    $software_version_list = $query->execute();
+    while ($software_version_list_data = $software_version_list->fetchObject())
+      {
+        $software_version[$software_version_list_data->openfoam_version] = $software_version_list_data->openfoam_version;
+      }
+    return $software_version;
+  }
+
+ function _lm_dir_name($lab, $name, $university)
+  {
+    $lab_title = ucname($lab);
+    $proposar_name = ucname($name);
+    $university_name = ucname($university);
+    $dir_name = $lab_title . " " . "by". " " . $proposar_name . ' ' . $university_name;
+    $directory_name = str_replace("__", "_", str_replace(" ", "_", $dir_name));
+    return $directory_name;
+  }
+

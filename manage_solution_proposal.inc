@@ -115,14 +115,6 @@ $form['country'] = array(
         '#title' => t('Pincode/Postal code')
     );
 
-
- $form['esim_version'] = array(
-    '#type' => 'item',
-    '#title' => t('eSim version used'),
-    '#markup'=>$proposal_data->esim_version,
-  );
-
-
   $form['lab_title'] = array(
     '#type' => 'item',
     '#markup' => $proposal_data->lab_title,
@@ -149,7 +141,7 @@ $form['country'] = array(
     );
     $form['solution_display'] = array(
         '#type' => 'item',
-        '#title' => t('Display the solution on the www.esim.fossee.in website'),
+        '#title' => t('Display the solution on the www.cfd.fossee.in website'),
         '#markup' => ($proposal_data->solution_display == 1) ? "Yes" : "No"
     );
     /*if ($proposal_data->solution_provider_uid == 0)

@@ -654,17 +654,5 @@ function _list_of_dependency_files()
   }
   return array($dependency_files, $dependency_files_class,  $dependency_files_value);
 }
-function _lm_list_of_software_version()
-  {
-    $software_version = array();
-    $query = db_select('openfoam_software_version');
-    $query->fields('openfoam_software_version');
-    $query->orderBy('id', 'ASC');
-    $software_version_list = $query->execute();
-    while ($software_version_list_data = $software_version_list->fetchObject())
-      {
-        $software_version[$software_version_list_data->version] = $software_version_list_data->version;
-      }
-    return $software_version;
-  }
+
 
