@@ -404,6 +404,10 @@ function lab_migration_proposal_form_submit($form, &$form_state)
     $solution_provider_contact_ph = '';
     $solution_provider_department = '';
     $solution_provider_university = '';
+    $solution_provider_city = '';
+    $solution_provider_country = '';
+    $solution_provider_state = '';
+    $solution_provider_pincode = '';
     if ($form_state['values']['solution_provider_uid'] == "1")
       {
         $solution_provider_uid = $user->uid;
@@ -413,6 +417,10 @@ function lab_migration_proposal_form_submit($form, &$form_state)
         $solution_provider_contact_ph = $form_state['values']['contact_ph'];
         $solution_provider_department = $form_state['values']['department'];
         $solution_provider_university = $form_state['values']['university'];
+        $solution_provider_city = $form_state['values']['city'];
+        $solution_provider_country = $form_state['values']['country'];
+        $solution_provider_state = $form_state['values']['all_state'];
+        $solution_provider_pincode = $form_state['values']['pincode'];
       }
     else
       {
@@ -434,11 +442,11 @@ function lab_migration_proposal_form_submit($form, &$form_state)
     $university = $v['university'];    
     $directory_name = _lm_dir_name($lab_title, $proposar_name, $university);
     $result = "INSERT INTO {lab_migration_proposal} 
-    (uid, approver_uid, name_title, name, contact_ph, department, university, city, pincode, state, country, version, lab_title, approval_status, solution_status, solution_provider_uid, solution_display, creation_date, approval_date, solution_date, solution_provider_name_title, solution_provider_name, solution_provider_contact_ph, solution_provider_department, solution_provider_university, directory_name) VALUES
+    (uid, approver_uid, name_title, name, contact_ph, department, university, city, pincode, state, country, version, lab_title, approval_status, solution_status, solution_provider_uid, solution_display, creation_date, approval_date, solution_date, solution_provider_name_title, solution_provider_name, solution_provider_contact_ph, solution_provider_department, solution_provider_university, solution_provider_city, solution_provider_country, solution_provider_state, solution_provider_pincode, directory_name) VALUES
     (:uid, :approver_uid, :name_title, :name, :contact_ph, :department, :university, :city, :pincode, :state, :country,
      :version, :lab_title, :approval_status, :solution_status, :solution_provider_uid, :solution_display, :creation_date, 
      :approval_date, :solution_date, :solution_provider_name_title, :solution_provider_name,
-      :solution_provider_contact_ph, :solution_provider_department, :solution_provider_university, :directory_name)";
+      :solution_provider_contact_ph, :solution_provider_department, :solution_provider_university, :solution_provider_city, :solution_provider_country, :solution_provider_state, :solution_provider_pincode, :directory_name)";
     $args = array(
         ":uid" => $user->uid,
         ":approver_uid" => 0,
@@ -465,6 +473,10 @@ function lab_migration_proposal_form_submit($form, &$form_state)
         ":solution_provider_contact_ph" => $solution_provider_contact_ph,
         ":solution_provider_department" => $solution_provider_department,
         ":solution_provider_university" => $solution_provider_university,
+        ":solution_provider_city" => $solution_provider_city,
+        ":solution_provider_country" => $solution_provider_country,
+        ":solution_provider_state" => $solution_provider_state,
+        ":solution_provider_pincode" => $solution_provider_pincode,
         ":directory_name" => $directory_name
     );
     $proposal_id = db_query($result, $args, array(

@@ -391,9 +391,9 @@ function lab_migration_bulk_approval_form_submit($form, &$form_state)
     $root_path = lab_migration_path();
     if ($form_state['clicked_button']['#value'] == 'Submit')
       {
-        if ($form_state['values']['lab'])
+        /*if ($form_state['values']['lab'])
             lab_migration_del_lab_pdf($form_state['values']['lab']);
-        if (user_access('lab migration bulk manage code'))
+        */if (user_access('lab migration bulk manage code'))
           {
             $query = db_select('lab_migration_proposal');
             $query->fields('lab_migration_proposal');
@@ -574,11 +574,12 @@ FOSSEE,IIT Bombay', array(
                 if (lab_migration_delete_lab($form_state['values']['lab']))
                   {
                     drupal_set_message(t('Dis-Approved and Deleted Entire Lab solutions.'), 'status');
-                    $query = db_select('lab_migration_experiment');
-                    $query->fields('lab_migration_experiment');
-                    $query->condition('proposal_id', $form_state['values']['lab']);
+                    $query = db_select('lab_migration_proposal');
+                    $query->fields('lab_migration_proposal');
+                    $query->condition('id', $form_state['values']['lab']);
                     $experiment_q = $query->execute()->fetchObject();
                     $dir_path = $root_path . $experiment_q->directory_name;
+                    //var_dump($dir_path);die;
                     if (is_dir($dir_path))
                       {
                         $res = rmdir($dir_path);
