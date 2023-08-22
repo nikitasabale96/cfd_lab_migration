@@ -57,7 +57,7 @@ function lab_migration_labs_progress_all()
     else
       {
         //$result = db_query($query);
-        $page_content .= "<ol>";
+        $page_content .= "<ol reversed>";
         while ($row = $result->fetchObject())
           {
             $page_content .= "<li>";
