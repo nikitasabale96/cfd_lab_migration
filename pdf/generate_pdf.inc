@@ -49,6 +49,16 @@ function generate_lm_pdf()
 						// // under the supervision/guidance of 
 						// $pdf->Cell(320, 10, 'This is to certify that' . $data3->name_title . ' ' . $data3->name . ',', '0', 1, 'C');
 
+						
+						// $pdf->SetFont('Times', 'I', 18);
+						// $pdf->SetTextColor(0, 0, 0);
+						// $pdf->Cell(115);
+						// $pdf->Cell(40, 10, 'This is to certify that', 0, 0, 'C');
+						// $pdf->Cell(2);
+						// $pdf->SetFont('Times', 'BI', 18);
+						// $pdf->SetTextColor(37, 22, 247);
+						// $pdf->Cell(60, 10, $data3->name_title . ' ' . $data3->name, 0, 1, 'C');
+
 						$pdf->SetFont('Times', 'BI', 18);
 						$pdf->SetTextColor(0, 0, 0);
 						$pdf->Cell(320, 10, 'This is to certify that', '0', '1', 'C');
@@ -58,30 +68,30 @@ function generate_lm_pdf()
 						$pdf->SetTextColor(37, 22, 247);
 						$pdf->Cell(320, 10, $data3->name_title . ' ' . $data3->name, '0', '1', 'C');
 						$pdf->Ln(0);
-						$pdf->SetTextColor(139, 69, 19);
+						$pdf->SetTextColor(0, 0, 0);
 						$pdf->Ln(2);
-						$pdf->Cell(320, 10, 'from the ' . $data3->department . ',', '0', 1, 'C');
+						$pdf->Cell(320, 10, 'from the ' . $data3->department . ' department,', '0', 1, 'C');
 						$pdf->Ln(0);
 						$pdf->SetFont('Times', 'BI', 18);
 						$pdf->SetTextColor(37, 22, 247);
 						$pdf->Cell(320, 10, $data3->institute_name , '0', 1, 'C');
-						$pdf->Cell(320, 10, $data3->institute_address, '0', 1, 'C');
+						// $pdf->Cell(320, 10, $data3->institute_address, '0', 1, 'C');
 						$pdf->Ln(2);
 						$pdf->SetFont('Times', 'BI', 18);
 						$pdf->SetTextColor(0, 0, 0);
-						$pdf->Cell(320, 10, ' has successfully migrated the ', '0', '1', 'C');
+						$pdf->Cell(320, 10, ' has helped migrate the ', '0', '1', 'C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(37, 22, 247);
-						$pdf->Cell(320, 10, $data3->lab_name, '0', '1', 'C');
-						//$pdf->Ln(0);
-						//$pdf->SetTextColor(0,0,0);
-						//$pdf->Cell(240,8,'in ', '0','1','C');
+						$pdf->Cell(320, 10, $data3->lab_name , '0', '1', 'C');
+						$pdf->Ln(0);
+						// $pdf->SetTextColor(0,0,0);
+						// $pdf->Cell(240,8,'in ', '0','1','C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(139, 69, 19);
-						$pdf->Cell(320, 10, '(' . $data3->semester_details . ')', '0', '1', 'C');
+						$pdf->Cell(320, 10,'of the semester '. $data3->semester_details . ' for ' . $data3->department. ' students', '0', '1', 'C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(0, 0, 0);
-						$pdf->Cell(320, 10, 'to a CFD-only lab.', '0', '1', 'C');
+						$pdf->Cell(320, 10, 'to an OpenFOAM lab only.', '0', '1', 'C');
 						$pdf->Ln(0);
 						//$proposal_get_id=0;
 						$UniqueString = "";
@@ -234,15 +244,32 @@ function generate_lm_pdf()
 						$path = drupal_get_path('module', 'lab_migration');
 						//$image1 = $mpath . "/pdf/images/scilab.png";
 						$pdf->Ln(30);
+
+						
+
+						// $pdf->SetFont('Times', 'I', 18);
+						// $pdf->SetTextColor(0, 0, 0);
+						// $pdf->Cell(115);
+						// $pdf->Cell(40, 10, 'This is to certify that', 0, 0, 'C');
+						// $pdf->Cell(2);
+						// $pdf->SetFont('Times', 'BI', 18);
+						// $pdf->SetTextColor(37, 22, 247);
+						// $pdf->Cell(60, 10, $data3->name_title . ' ' . $data3->name, 0, 1, 'C');
+
+
+
 						//$pdf->Cell(200, 8, $pdf->Image($image1, 100, 19, 0, 28), 0, 1, 'C');
 						// $pdf->Ln(35);
 						/*$pdf->SetFont('Times', 'BI', 25);
 						$pdf->SetTextColor(139, 69, 19);
 						$pdf->Cell(240, 8, 'Certificate of Participation', '0', 1, 'C');
 						$pdf->Ln(3);*/
+
 						$pdf->SetFont('Times', 'I', 18);
 						$pdf->SetTextColor(0, 0, 0);
+						// $data3->SetTextColor(37, 22, 247);
 						$pdf->Cell(320, 10, 'This is to certify that', '0', '1', 'C');
+						
 						$pdf->Ln(0);
 						$pdf->SetFont('Times', 'BI', 18);
 						$pdf->SetTextColor(37, 22, 247);
@@ -254,19 +281,21 @@ function generate_lm_pdf()
 						$pdf->Ln(0);
 						$pdf->SetTextColor(37, 22, 247);
 						$pdf->Cell(320, 10, $data3->institute_name , '0', 1, 'C');
-						$pdf->Cell(320, 10, $data3->institute_address, '0', 1, 'C');
+						// $pdf->Cell(320, 10, $data3->institute_address, '0', 1, 'C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(0, 0, 0);
-						$pdf->Cell(320, 10, ' has developed the solutions in CFD for the ', '0', 1, 'C');
+						$pdf->Cell(320, 10, ' has developed the solutions in CFD for the course', '0', 1, 'C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(37, 22, 247);
-						$pdf->Cell(320, 10, $data3->lab_name, '0', '1', 'C');
+						$pdf->Cell(320, 10, $data3->lab_name. ',', '0', '1', 'C');
 						//$pdf->Ln(0);
 						//$pdf->SetTextColor(0,0,0);
 						//$pdf->Cell(240,8,'in ', '0','1','C');
 						$pdf->Ln(0);
+						$pdf->SetTextColor(0, 0, 0);
+						$pdf->Cell(320, 10, ' Which is offered in the ', '0', 1, 'C');
 						$pdf->SetTextColor(139, 69, 19);
-						$pdf->Cell(320, 10, '(' . $data3->semester_details . ')'. '.', '0', '1', 'C');
+						$pdf->Cell(320, 10, 'semester ' . $data3->semester_details . ' for '. $data3->department. ' students.', '0', '1', 'C');
 						$pdf->Ln(4);
 						// $pdf->Ln(0);
 						// $pdf->Cell(320, 10, '', '0', '1', 'C');

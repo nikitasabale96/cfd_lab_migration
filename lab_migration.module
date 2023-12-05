@@ -1011,6 +1011,7 @@ function lab_migration_certificate_form($form, $form_state)
       $form['semester_details'] = array(
               '#type' => 'textfield',
               '#title' => t('Semester details'),
+              '#description' => 'Eg. V or II',
               '#required' => TRUE
       );
       $form['proposal_id'] = array(
@@ -1031,7 +1032,7 @@ function lab_migration_certificate_form_submit($form, &$form_state)
       $v = $form_state["values"];
       $result = "INSERT INTO {lab_migration_certificate} 
   (uid, name_title, name, email_id, institute_name, institute_address, lab_name, department, semester_details,proposal_id,type,creation_date) VALUES
-  (:uid, :name_title, :name, :email_id, :institute_name, :institute_address, :lab_name, :department, :semester_details,:proposal_id,:type,:creation_date)";
+  (:uid, :name_title, :name, :email_id, :institute_name, :institute_address, :lab_name, :department,  :semester_details,:proposal_id,:type,:creation_date)";
       $args = array(
               ":uid" => $user->uid,
               ":name_title" => trim($v['name_title']),
@@ -1112,7 +1113,8 @@ function lab_migration_certificate_edit_form($form, $form_state)
                       );
                       $form['semester_details'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Semester details'),
+                              '#title' => t('Semester details '),
+                              '#description' => 'Eg.V or II',
                               '#default_value' => $details_list->semester_details
                       );
                       $form['proposal_id'] = array(
@@ -1233,7 +1235,8 @@ function lab_migration_certificate_participation_form($form, $form_state)
       );
       $form['semester_details'] = array(              
               '#type' => 'textfield',
-              '#title' => t('Semester details'),
+              '#title' => t('Semester details and department'),
+              '#description' => 'Eg. V or II',
               '#required' => TRUE
               );
       $form['proposal_id'] = array(
@@ -1333,7 +1336,8 @@ function lab_migration_certificate_participation_edit_form($form, $form_state)
                       );
                       $form['semester_details'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Semester details'),
+                              '#title' => t('Semester details and department'),
+                              '#description' => 'Eg. V or II',
                               '#default_value' => $details_list->semester_details
                       );
                       $form['proposal_id'] = array(
