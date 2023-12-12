@@ -88,7 +88,7 @@ function generate_lm_pdf()
 						// $pdf->Cell(240,8,'in ', '0','1','C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(139, 69, 19);
-						$pdf->Cell(320, 10,'of the semester '. $data3->semester_details . ' for ' . $data3->department. ' students', '0', '1', 'C');
+						$pdf->Cell(320, 10,'of the '. $data3->semester_details. ' semester' . ' for ' . $data3->department. ' students', '0', '1', 'C');
 						$pdf->Ln(0);
 						$pdf->SetTextColor(0, 0, 0);
 						$pdf->Cell(320, 10, 'to an OpenFOAM lab only.', '0', '1', 'C');
@@ -295,7 +295,7 @@ function generate_lm_pdf()
 						$pdf->SetTextColor(0, 0, 0);
 						$pdf->Cell(320, 10, ' Which is offered in the ', '0', 1, 'C');
 						$pdf->SetTextColor(139, 69, 19);
-						$pdf->Cell(320, 10, 'semester ' . $data3->semester_details . ' for '. $data3->department. ' students.', '0', '1', 'C');
+						$pdf->Cell(320, 10,$data3->semester_details . ' semester' . ' for '. $data3->department. ' students.', '0', '1', 'C');
 						$pdf->Ln(4);
 						// $pdf->Ln(0);
 						// $pdf->Cell(320, 10, '', '0', '1', 'C');
