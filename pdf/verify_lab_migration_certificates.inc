@@ -80,7 +80,7 @@ function verify_qrcode_lm_fromdb($qr_code)
 						//$page_content.="<tr><td>Name</td>";
 						//$page_content.="<td>".$data2->name_title. ' '.$data2->name."</td></tr>";
 						$page_content .= "<tr><td>Project</td>";
-						$page_content .= "<td>Scilab Lab Migration Project</td></tr>";
+						$page_content .= "<td>CFD Lab Migration Project</td></tr>";
 						$page_content .= "<tr><td>Lab completed</td>";
 						$page_content .= "<td>" . $data2->lab_name . "</td></tr>";
 						$page_content .= "<tr><td>Department</td>";
@@ -100,7 +100,7 @@ function verify_qrcode_lm_fromdb($qr_code)
 						//$page_content.="<tr><td>Name</td>";
 						//$page_content.="<td>".$data2->name_title. ' '.$data2->name."</td></tr>";
 						$page_content .= "<tr><td>Project</td>";
-						$page_content .= "<td>Scilab Lab Migration Project</td></tr>";
+						$page_content .= "<td>CFD Lab Migration Project</td></tr>";
 						$page_content .= "<tr><td>Contributed to complete the lab</td>";
 						$page_content .= "<td>" . $data2->lab_name . "</td></tr>";
 						$page_content .= "<tr><td>Participant</td>";
