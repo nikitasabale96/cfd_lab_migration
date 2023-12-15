@@ -990,12 +990,12 @@ function lab_migration_certificate_form($form, $form_state)
       );
       $form['institute_name'] = array(
               '#type' => 'textfield',
-              '#title' => t('Collage / Institue Name'),
+              '#title' => t('college / Institue Name'),
               '#required' => TRUE
       );
       $form['institute_address'] = array(
               '#type' => 'textfield',
-              '#title' => t('Collage / Institue address'),
+              '#title' => t('college / Institue address'),
               '#required' => TRUE
       );
       $form['lab_name'] = array(
@@ -1093,12 +1093,12 @@ function lab_migration_certificate_edit_form($form, $form_state)
                       );
                       $form['institute_name'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Collage / Institue Name'),
+                              '#title' => t('college / Institue Name'),
                               '#default_value' => $details_list->institute_name
                       );
                       $form['institute_address'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Collage / Institue address'),
+                              '#title' => t('college / Institue address'),
                               '#default_value' => $details_list->institute_address
                       );
                       $form['lab_name'] = array(
@@ -1215,12 +1215,12 @@ function lab_migration_certificate_participation_form($form, $form_state)
       );
       $form['institute_name'] = array(
               '#type' => 'textfield',
-              '#title' => t('Collage / Institue Name'),
+              '#title' => t('college / Institue Name'),
               '#required' => TRUE
       );
       $form['institute_address'] = array(
               '#type' => 'textfield',
-              '#title' => t('Collage / Institue address'),
+              '#title' => t('college / Institue address'),
               '#required' => TRUE
       );
       $form['lab_name'] = array(
@@ -1316,12 +1316,12 @@ function lab_migration_certificate_participation_edit_form($form, $form_state)
                       );
                       $form['institute_name'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Collage / Institue Name'),
+                              '#title' => t('college / Institue Name'),
                               '#default_value' => $details_list->institute_name
                       );
                       $form['institute_address'] = array(
                               '#type' => 'textfield',
-                              '#title' => t('Collage / Institue address'),
+                              '#title' => t('college / Institue address'),
                               '#default_value' => $details_list->institute_address
                       );
                       $form['lab_name'] = array(
