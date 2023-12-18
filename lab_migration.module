@@ -990,7 +990,7 @@ function lab_migration_certificate_form($form, $form_state)
       );
       $form['institute_name'] = array(
               '#type' => 'textfield',
-              '#title' => t('college / Institue Name'),
+              '#title' => t('college / Institue name'),
               '#required' => TRUE
       );
       $form['institute_address'] = array(
