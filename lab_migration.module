@@ -408,6 +408,18 @@ function lab_migration_menu()
         ),
         'file' => 'lab_details.inc'
     );
+    $items['lab-migration/experiments-list'] = array(
+        'title' => 'Download Codes',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array(
+            'lab_migration_experiments_list'
+        ),
+        'access arguments' => array(
+            'lab migration download code'
+        ),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'experiments_list.inc'
+    );
     /* LABS IN PROGRESS */
     $items['lab-migration/labs-progress'] = array(
         'title' => 'Labs in Progress',

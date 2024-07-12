@@ -23,7 +23,7 @@ function lab_migration_completed_labs_all()
             $preference_rows[] = array(
                 $i,
                 $row->university,
-                l($row->lab_title, "lab-migration/lab-migration-run/" . $row->id),
+                l($row->lab_title, "lab-migration/experiments-list/" . $row->id),
                 $approval_date
             );
             $i--;
