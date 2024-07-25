@@ -18,6 +18,18 @@ function lab_migration_download_solution_file()
     header('Content-Length: ' . filesize($root_path . $solution_file_data->directory_name . '/' . $solution_file_data->filepath));
     readfile($root_path . $solution_file_data->directory_name . '/' . $solution_file_data->filepath);
   }
+  function lab_migration_download_problem_statement()
+  {
+    $proposal_id = arg(3);
+    $root_path = lab_migration_path();
+    $proposal_q = db_query("SELECT lmp.* FROM lab_migration_proposal lmp WHERE lmp.id = :proposal_id LIMIT 1", array(':proposal_id' => $proposal_id));
+    $proposal_data = $proposal_q->fetchObject();
+    header('Content-Type: doc');
+    //header('Content-Type: application/octet-stram');
+    header('Content-disposition: attachment; filename="' . str_replace(' ', '_', ($proposal_data->problem_statement_file)) . '"');
+    header('Content-Length: ' . filesize($root_path . $proposal_data->directory_name . '/' . $proposal_data->problem_statement_file));
+    readfile($root_path . $proposal_data->directory_name . '/' . $proposal_data->problem_statement_file);
+  }
 function lab_migration_download_dependency_file()
   {
     $dependency_file_id = arg(3);

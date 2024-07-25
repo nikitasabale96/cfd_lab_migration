@@ -341,14 +341,16 @@ function lab_migration_menu()
         'type' => MENU_CALLBACK,
         'file' => 'download.inc'
     );
-    /*$items['lab_migration/download/dependency'] = array(
-    'title' => 'Code Download',
-    'description' => 'Code Download', 
-    'page callback' => 'lab_migration_download_dependency_file',
-    'access arguments' => array('lab migration download code'),
-    'type' => MENU_CALLBACK,
-    'file' => 'download.inc',
-    );*/
+    $items['lab-migration/download/problem-statement'] = array(
+        'title' => 'Download Problem Statement',
+        'description' => 'Download Problem Statement',
+        'page callback' => 'lab_migration_download_problem_statement',
+        'access arguments' => array(
+            'lab migration download code'
+        ),
+        'type' => MENU_CALLBACK,
+        'file' => 'download.inc'
+    );
     $items['lab-migration/download/solution'] = array(
         'title' => 'Code Download',
         'description' => 'Code Download',
@@ -727,7 +729,7 @@ function lab_migration_ajax()
 /*************************** VALIDATION FUNCTIONS *****************************/
 function lab_migration_check_valid_filename($file_name)
   {
-    if (!preg_match('/^[0-9a-zA-Z\.]+$/', $file_name))
+    if (!preg_match('/^[0-9a-zA-Z_\.]+$/', $file_name))
         return FALSE;
     else if (substr_count($file_name, ".") > 1)
         return FALSE;

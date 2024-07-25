@@ -219,7 +219,7 @@ function lab_migration_upload_code_form($form,$form_state)
   );
   $form['code_warning'] = array(
     '#type' => 'item',
-    '#title' => t('Upload all the dwsim project files in .zip format'),
+    '#title' => t('Upload all the OpenFOAM project files in .zip format'),
     '#prefix' => '<div style="color:red">',
     '#suffix' => '</div>',
   );
@@ -234,7 +234,7 @@ function lab_migration_upload_code_form($form,$form_state)
       '#title' => t('Upload main or source file'),
       '#size' => 48,
       '#description' => t('Only alphabets and numbers are allowed as a valid filename.') . '<br />' .
-      t('Allowed file extensions : ') . variable_get('lab_migration_source_extensions', ''),
+      t('Allowed file extensions: ') . variable_get('lab_migration_source_extensions', ''),
   );
 
  /* $form['dep_files'] = array(
@@ -292,40 +292,18 @@ function lab_migration_upload_code_form($form,$form_state)
   );
   $form['result']['result1'] = array(
       '#type' => 'file',
-      '#title' => t('Upload result file'),
+      '#title' => t('Upload result file. To view the template for result submission please click <a href="https://cfd.fossee.in/sites/default/files/Template_For_Result.doc" target="_blank">here</a>.'),
       '#size' => 48,
       '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
-      t('Allowed file extensions : ') . variable_get('lab_migration_result_extensions', ''),
+      t('Allowed file extensions: ') . variable_get('lab_migration_result_pdf_extensions', ''),
   );
   $form['result']['result2'] = array(
       '#type' => 'file',
       '#title' => t('Upload result file'),
       '#size' => 48,
       '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
-      t('Allowed file extensions : ') . variable_get('lab_migration_result_extensions', ''),
+      t('Allowed file extensions: ') . variable_get('lab_migration_result_extensions', ''),
   );
-/*
-  $form['xcos'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('XCOS Files'),
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-  );
-  $form['xcos']['xcos1'] = array(
-      '#type' => 'file',
-      '#title' => t('Upload xcos file'),
-      '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
-      t('Allowed file extensions : ') . variable_get('lab_migration_xcos_extensions', ''),
-  );
-  $form['xcos']['xcos2'] = array(
-      '#type' => 'file',
-      '#title' => t('Upload xcos file'),
-      '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
-      t('Allowed file extensions : ') . variable_get('lab_migration_xcos_extensions', ''),
-  );
-*/
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Submit')
@@ -357,7 +335,8 @@ function lab_migration_upload_code_form_validate($form, &$form_state)
     /* check if atleast one source or result file is uploaded */  
     if ( ! ($_FILES['files']['name']['sourcefile1'] ))
       form_set_error('sourcefile1', t('Please upload atleast one main or source file.'));
-
+if ( ! ($_FILES['files']['name']['result1'] ))
+      form_set_error('result1', t('Please upload the result file in the form of pdf.'));
     /* check for valid filename extensions */  
     foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
     {
@@ -366,10 +345,10 @@ function lab_migration_upload_code_form_validate($form, &$form_state)
         /* checking file type */
         if (strstr($file_form_name, 'source'))
           $file_type = 'S';
-        else if (strstr($file_form_name, 'result'))
+        else if (strstr($file_form_name, 'result1'))
+          $file_type = 'P';
+        else if (strstr($file_form_name, 'result2'))
           $file_type = 'R';
-        else if (strstr($file_form_name, 'xcos'))
-          $file_type = 'X';
         else
           $file_type = 'U';
 
@@ -382,8 +361,8 @@ function lab_migration_upload_code_form_validate($form, &$form_state)
         case 'R':
           $allowed_extensions_str = variable_get('lab_migration_result_extensions', '');
           break;
-        case 'X':
-          $allowed_extensions_str = variable_get('lab_migration_xcos_extensions', '');
+        case 'P':
+          $allowed_extensions_str = variable_get('lab_migration_result_pdf_extensions', '');
           break;
         }
         $allowed_extensions = explode(',' , $allowed_extensions_str);
@@ -562,17 +541,19 @@ function lab_migration_upload_code_form_submit($form, &$form_state) {
         return;
       }
 
+
       /* uploading file */
       if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
       {
         /* for uploaded files making an entry in the database */
+        //var_dump($_FILES['files']['type'][$file_form_name]);die;
         $query = "INSERT INTO {lab_migration_solution_files} (solution_id, filename, filepath, filemime, filesize, filetype, timestamp)
           VALUES (:solution_id, :filename, :filepath, :filemime, :filesize, :filetype, :timestamp)";
           $args = array(
                     ":solution_id" => $solution_id,
                     ":filename" => $_FILES['files']['name'][$file_form_name],
                     ":filepath" => $file_path . $_FILES['files']['name'][$file_form_name],
-                    ":filemime" => 'application/zip',
+                    ":filemime" => $_FILES['files']['type'][$file_form_name],
                     ":filesize" => $_FILES['files']['size'][$file_form_name],
                     ":filetype" => $file_type,
                     ":timestamp" => time()

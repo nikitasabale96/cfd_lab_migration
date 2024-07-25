@@ -1,11 +1,12 @@
 <?php
 function lab_migration_run_form($form, &$form_state)
   {
-    $options_first = _list_of_labs();
+    
     $options_two = _ajax_get_experiment_list();
     $select_two = isset($form_state['values']['lab_experiment_list']) ? $form_state['values']['lab_experiment_list'] : key($options_two);
     $url_lab_id = (int) arg(2);
     $url_experiment_id = (int) arg(3);
+    $options_first = _list_of_labs($url_lab_id);
     if (!$url_lab_id)
       {
         $selected = isset($form_state['values']['lab']) ? $form_state['values']['lab'] : key($options_first);
@@ -34,12 +35,10 @@ function lab_migration_run_form($form, &$form_state)
     $form['lab'] = array(
         '#type' => 'select',
         '#title' => t('Title of the lab'),
-        '#options' => _list_of_labs(),
+        '#options' => _list_of_labs($selected),
         '#default_value' => $selected,
-        '#disabled' => TRUE,
-        
     );
-    if (!$url_lab_id)
+    /*if (!$url_lab_id)
       {
         $form['selected_lab'] = array(
             '#type' => 'item',
@@ -61,19 +60,12 @@ function lab_migration_run_form($form, &$form_state)
             '#type' => 'select',
             '#title' => t('Title of the experiment'),
             '#options' => _ajax_get_experiment_list($selected),
-            //'#default_value' => isset($form_state['values']['lab_experiment_list']) ? $form_state['values']['lab_experiment_list'] : '',
+            '#default_value' => isset($form_state['values']['lab_experiment_list']) ? $form_state['values']['lab_experiment_list'] : '',
             '#ajax' => array(
                 'callback' => 'ajax_solution_list_callback'
             ),
             '#prefix' => '<div id="ajax_selected_experiment">',
             '#suffix' => '</div>',
-            '#states' => array(
-                'invisible' => array(
-                    ':input[name="lab"]' => array(
-                        'value' => 0
-                    )
-                )
-            )
         );
         $form['download_experiment'] = array(
             '#type' => 'item',
@@ -90,13 +82,6 @@ function lab_migration_run_form($form, &$form_state)
             ),
             '#prefix' => '<div id="ajax_selected_solution">',
             '#suffix' => '</div>',
-            '#states' => array(
-                'invisible' => array(
-                    ':input[name="lab"]' => array(
-                        'value' => 0
-                    )
-                )
-            )
         );
         $form['download_solution'] = array(
             '#type' => 'item',
@@ -120,31 +105,27 @@ function lab_migration_run_form($form, &$form_state)
         );
       }
     else
-      {
+      {*/
         $lab_default_value = $url_lab_id;
-        $form['selected_lab'] = array(
+        $experiment_default_value = $url_experiment_id;
+        /*$form['selected_lab'] = array(
             '#type' => 'item',
             '#markup' => '<div id="ajax_selected_lab">' . l('Download Lab Solutions', 'lab-migration/download/lab/' . $lab_default_value) . '</div>'
         );
-        /* $form['selected_lab_pdf'] = array(
-        '#type' => 'item',
-        '#markup' => '<div id="ajax_selected_lab_pdf">'. l('Download PDF of Lab Solutions', 'lab-migration/generate-lab/' . $lab_default_value . '/1') .'</div>',
-        
-        );*/
         if ($lab_default_value == '2')
           {
             $form['selected_lab_dwsim'] = array(
                 '#type' => 'item',
                 '#markup' => '<div id="ajax_selected_lab_dwsim">' . l('Download Lab Solutions (dwsim Version)', 'lab-migration-uploads/dwsim_Version.zip') . '</div>'
             );
-          }
-        $form['lab_details'] = array(
+          }*/
+          $form['selected_lab'] = array(
             '#type' => 'item',
-            '#markup' => '<div id="ajax_lab_details">' . _lab_details($lab_default_value) . '</div>'
+            '#markup' => '<div id="ajax_selected_lab">' . l('Download Lab Solutions', 'lab-migration/download/lab/' . $lab_default_value) . '</div>'
         );
         $form['lab_experiment_list'] = array(
             '#type' => 'select',
-            '#title' => t('Titile of the experiment'),
+            '#title' => t('Title of the experiment'),
             '#options' => _ajax_get_experiment_list($selected),
             '#default_value' => $selected_experiment,
             '#ajax' => array(
@@ -152,35 +133,35 @@ function lab_migration_run_form($form, &$form_state)
             ),
             '#prefix' => '<div id="ajax_selected_experiment">',
             '#suffix' => '</div>',
-            '#states' => array(
+            /*'#states' => array(
                 'invisible' => array(
                     ':input[name="lab"]' => array(
                         'value' => 0
                     )
                 )
-            )
+            )*/
         );
         $form['download_experiment'] = array(
             '#type' => 'item',
-            '#markup' => '<div id="ajax_download_experiments"></div>'
+            '#markup' => '<div id="ajax_download_experiments">' . l('Download Experiment', 'lab-migration/download/experiment/' . $selected_experiment) . '</div>'
         );
         $form['lab_solution_list'] = array(
             '#type' => 'select',
             '#title' => t('Solution'),
             '#options' => _ajax_get_solution_list($selected_experiment),
-            '#default_value' => isset($form_state['values']['lab_solution_list']) ? $form_state['values']['lab_solution_list'] : '',
+            //'#default_value' => isset($form_state['values']['lab_solution_list']) ? $form_state['values']['lab_solution_list'] : '',
             '#ajax' => array(
                 'callback' => 'ajax_solution_files_callback'
             ),
             '#prefix' => '<div id="ajax_selected_solution">',
             '#suffix' => '</div>',
-            '#states' => array(
+            /*'#states' => array(
                 'invisible' => array(
                     ':input[name="lab_experiment_list"]' => array(
                         'value' => 0
                     )
                 )
-            )
+            )*/
         );
         $form['download_solution'] = array(
             '#type' => 'item',
@@ -202,54 +183,50 @@ function lab_migration_run_form($form, &$form_state)
                 )
             )
         );
-      }
-    /*
-    $form['message'] = array(
-    '#type' => 'textarea',
-    '#title' => t('If Dis-Approved please specify reason for Dis-Approval'),
-    '#prefix' => '<div id= "message_submit">',   
-    '#states' => array('invisible' => array(':input[name="lab"]' => array('value' => 0,),),), 
-    
-    );
-    
-    $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit'),      
-    '#suffix' => '</div>',
-    '#states' => array('invisible' => array(':input[name="lab"]' => array('value' => 0,),),),
-    
-    );*/
+        $form['lab_details'] = array(
+            '#type' => 'item',
+            '#markup' => '<div id="ajax_lab_details">' . _lab_details($lab_default_value) . '</div>'
+        );
+        $form['back_to_completed_labs'] = array(
+            '#type' => 'item',
+            '#markup' => l('Back to Completed Labs', 'lab-migration/completed-labs')
+        );
+      //}
     return $form;
   }
 function ajax_experiment_list_callback($form, $form_state)
   {
     $commands = array();
     $lab_default_value = $form_state['values']['lab'];
+    //var_dump($lab_default_value);die;
     if ($lab_default_value != 0)
       {
         $form['lab_details']['#markup'] = _lab_details($lab_default_value);
         $lab_details = _lab_information($lab_default_value);
         $user_solution_provider = user_load($lab_details->solution_provider_uid);
         //var_dump($lab_details->solution_provider_uid);
-        if ($lab_details->solution_provider_uid > 0)
+        /*if ($lab_details->solution_provider_uid > 0)
           {
             $commands[] = ajax_command_html('#ajax_selected_lab', l('Download Lab Solutions', 'lab-migration/download/lab/' . $lab_default_value));
             if ($lab_default_value == '2')
               {
                 $commands[] = ajax_command_html('#ajax_selected_lab_dwsim', l('Download Lab Solutions (dwsim Version)', 'lab-migration_uploads/dwsim_Version.zip'));
               }
-            /* $commands[] = ajax_command_html('#ajax_selected_lab_pdf', l('Download PDF of Lab Solutions', 'lab-migration/generate-lab/' . $lab_default_value . '/1'));*/
+            
           }
         else
           {
             $commands[] = ajax_command_html('#ajax_selected_lab', '');
             $commands[] = ajax_command_html('#ajax_selected_lab_pdf', '');
             $commands[] = ajax_command_html('#ajax_selected_lab_dwsim', '');
-          }
+          }*/
         $commands[] = ajax_command_html('#ajax_lab_details', _lab_details($lab_default_value));
         $form['lab_experiment_list']['#options'] = _ajax_get_experiment_list($lab_default_value);
         $commands[] = ajax_command_replace('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
         $commands[] = ajax_command_html('#ajax_selected_solution', '');
+        /*$form['lab_solution_list']['#options'] = _ajax_get_solution_list();
+        $commands[] = ajax_command_html('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
+        *///$commands[] = ajax_command_replace('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
         $commands[] = ajax_command_html('#ajax_solution_files', '');
         $commands[] = ajax_command_html('#ajax_download_experiment_solution', '');
         $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');
@@ -259,14 +236,16 @@ function ajax_experiment_list_callback($form, $form_state)
       {
         $form['lab_experiment_list']['#options'] = _ajax_get_experiment_list();
         $commands[] = ajax_command_replace('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
+        /*$form['lab_solution_list']['#options'] = _ajax_get_solution_list();*/
         $commands[] = ajax_command_html('#ajax_lab_details', '');
         $commands[] = ajax_command_html('#ajax_selected_lab', '');
         $commands[] = ajax_command_html('#ajax_selected_lab_dwsim', '');
         $commands[] = ajax_command_html('#ajax_selected_lab_pdf', '');
-        $commands[] = ajax_command_data('#ajax_selected_lab', 'form_state_value_select', $form_state['values']['lab']);
-        $commands[] = ajax_command_html('#ajax_selected_experiment', '');
+        //$commands[] = ajax_command_data('#ajax_selected_lab', 'form_state_value_select', $form_state['values']['lab']);
+        //$commands[] = ajax_command_html('#ajax_selected_experiment', '');
         $commands[] = ajax_command_html('#ajax_download_experiments', '');
         $commands[] = ajax_command_html('#ajax_selected_solution', '');
+        //$commands[] = ajax_command_replace('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
         $commands[] = ajax_command_html('#ajax_solution_files', '');
         $commands[] = ajax_command_html('#ajax_download_experiment_solution', '');
         $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');
@@ -279,14 +258,17 @@ function ajax_experiment_list_callback($form, $form_state)
 function ajax_solution_list_callback($form, $form_state)
   {
     $commands = array();
+    //$lab_default_value = $form_state['values']['lab'];
     $experiment_list_default_value = $form_state['values']['lab_experiment_list'];
-    //var_dump($lab_default_value);
+    //var_dump($lab_default_value . '      ' . $experiment_list_default_value);die;
     if ($experiment_list_default_value != 0)
       {
+        //var_dump($experiment_list_default_value);
         $form['lab_solution_list']['#options'] = _ajax_get_solution_list($experiment_list_default_value);
+        $commands[] = ajax_command_replace('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
         $commands[] = ajax_command_html('#ajax_download_experiments', l('Download Experiment', 'lab-migration/download/experiment/' . $experiment_list_default_value));
-        $commands[] = ajax_command_html('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
-        $commands[] = ajax_command_html('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
+/*        $commands[] = ajax_command_html('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
+*/        
         // $commands[] = ajax_command_html('#ajax_solution_files', '');
         // $commands[] = ajax_command_html('#ajax_download_experiment_solution', '');
         // $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');
@@ -294,12 +276,12 @@ function ajax_solution_list_callback($form, $form_state)
     else
       {
         $form['lab_solution_list']['#options'] = _ajax_get_solution_list();
-        $commands[] = ajax_command_html('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
-        $commands[] = ajax_command_html('#ajax_download_experiments', '');
-        $commands[] = ajax_command_html('#ajax_selected_solution', '');
+       $commands[] = ajax_command_html('#ajax_selected_solution', drupal_render($form['lab_solution_list']));
+        /* $commands[] = ajax_command_html('#ajax_download_experiments', '');
+        //$commands[] = ajax_command_html('#ajax_selected_solution', '');
         $commands[] = ajax_command_html('#ajax_solution_files', '');
         $commands[] = ajax_command_html('#ajax_download_experiment_solution', '');
-        $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');
+        $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');*/
         // $commands[] = ajax_command_replace('#ajax_selected_experiment',drupal_render($form['lab_experiment_list']));
       }
     return array(
@@ -316,7 +298,6 @@ function ajax_solution_files_callback($form, $form_state)
       {
         $commands[] = ajax_command_html('#ajax_selected_lab_experiment_solution_action', drupal_render($form['lab_experiment_solution_actions']));
         /*************************************************************************************/
-        //$solution_list_q = db_query("SELECT * FROM {lab_migration_solution_files} WHERE solution_id = %d", $form_state['values']['solution']);
         $query = db_select('lab_migration_solution_files');
         $query->fields('lab_migration_solution_files');
         $query->condition('solution_id', $solution_list_default_value);
@@ -421,17 +402,13 @@ function bootstrap_table_format($headers, $rows)
         ";
     return $table;
   }
-/*****************************************************/
-function _list_of_labs()
+  function _list_of_labs($selected)
   {
-    $lab_titles = array(
-        '0' => 'Please select...'
-    );
+    $lab_titles = array();
     //$lab_titles_q = db_query("SELECT * FROM {lab_migration_proposal} WHERE solution_display = 1 ORDER BY lab_title ASC");
     $query = db_select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
-    $query->condition('solution_display', 1);
-    $query->condition('approval_status', 3);
+    $query->condition('id',$selected);
     $query->orderBy('lab_title', 'ASC');
     $lab_titles_q = $query->execute();
     while ($lab_titles_data = $lab_titles_q->fetchObject())
@@ -439,6 +416,17 @@ function _list_of_labs()
         $lab_titles[$lab_titles_data->id] = $lab_titles_data->lab_title . ' (Proposed by ' . $lab_titles_data->name_title .' '.$lab_titles_data->name . ')';
       }
     return $lab_titles;
+  }
+/*****************************************************/
+function _selected_lab_name($selected)
+  {
+    $query = db_select('lab_migration_proposal');
+    $query->fields('lab_migration_proposal');
+    $query->condition('id', $selected);
+    $query->condition('approval_status', 3);
+    $lab_titles_q = $query->execute();
+    $lab_titles_data = $lab_titles_q->fetchObject();
+    return $lab_titles_data->lab_title;
   }
 function _ajax_get_experiment_list($lab_default_value = '')
   {
@@ -462,16 +450,9 @@ function _ajax_get_solution_list($lab_experiment_list = '')
     $solutions = array(
         '0' => 'Please select...'
     );
-    // $solutions_q = db_query("SELECT * FROM {lab_migration_solution} WHERE experiment_id = %d ORDER BY
-    //  CAST(SUBSTRING_INDEX(code_number, '.', 1) AS BINARY) ASC,
-    //   CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(code_number , '.', 2), '.', -1) AS UNSIGNED) ASC,
-    //  CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(code_number , '.', -1), '.', 1) AS UNSIGNED) ASC", $experiment_id);
     $query = db_select('lab_migration_solution');
     $query->fields('lab_migration_solution');
     $query->condition('experiment_id', $lab_experiment_list);
-    //$query->orderBy("CAST(SUBSTRING_INDEX(code_number, '.', 1) AS BINARY", "ASC");
-    // $query->orderBy("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(code_number , '.', 2), '.', -1) AS UNSIGNED", "ASC");
-    // $query->orderBy("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(code_number , '.', -1), '.', 1) AS UNSIGNED", "ASC");
     $solutions_q = $query->execute();
     while ($solutions_data = $solutions_q->fetchObject())
       {
@@ -509,22 +490,22 @@ function _lab_details($lab_default_value)
             $user_solution_provider = user_load($lab_details->solution_provider_uid);
             if ($user_solution_provider)
               {
-                $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Solution Provider Name:</strong> ' . $lab_details->solution_provider_name_title . ' ' . $lab_details->solution_provider_name . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->solution_provider_department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->solution_provider_university . '</li>' . '</ul>';
+                $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span>' . '<ul>' . '<li><strong>Solution Provider Name:</strong> ' . $lab_details->solution_provider_name_title . ' ' . $lab_details->solution_provider_name . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->solution_provider_department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->solution_provider_university . '</li>' . '</ul>';
               }
             else
               {
-                $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Solution Provider: </strong> (Open) </li>' . '</ul>';
+                $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span>' . '<ul>' . '<li><strong>Solution Provider: </strong> (Open) </li>' . '</ul>';
               }
           }
         else
           {
-            $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Solution Provider: </strong> (Open) </li>' . '</ul>';
+            $solution_provider = '<span style="color: rgb(128, 0, 0);"><strong>Solution Provider</strong></span>' . '<ul>' . '<li><strong>Solution Provider: </strong> (Open) </li>' . '</ul>';
           }}
           else{
           drupal_goto('lab-migration/lab-migration-run');
           
       }
-    $form['lab_details']['#markup'] = '<span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' . '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->university . '</li>' . '<li><strong>Category:</strong> ' . $lab_details->category . '</li>' . '</ul>' . $solution_provider;
+    $form['lab_details']['#markup'] = '<table><tr><td><span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span>' . '<ul>' . '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' . '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->university . '</li>' . '<li><strong>Category:</strong> ' . $lab_details->category . '</li>' . '</ul></td><td>' . $solution_provider . '</td></tr></table>';
     $details = $form['lab_details']['#markup'];
     return $details;
     }

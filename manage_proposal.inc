@@ -297,6 +297,11 @@ function lab_migration_proposal_approval_form($form, $form_state)
         '#title' => t('Do you want to provide the solution'),
         '#markup' => $solution_provider
     );
+    $form['problem_statement_file'] = array(
+        '#type' =>  'item',
+        '#title' => t('Problem statement file uploaded by the proposer'),
+        '#markup' => l('View', 'lab-migration/download/problem-statement/' . $proposal_data->id)
+    );
     /* $form['solution_display'] = array(
     '#type' => 'item',
     '#title' => t('Do you want to display the solution on the www.dwsim.fossee.in website'),

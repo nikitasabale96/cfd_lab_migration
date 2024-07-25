@@ -25,7 +25,7 @@ function lab_migration_experiments_list($form, &$form_state)
         '#options' => _list_of_labs(),
         '#default_value' => $selected,
         '#ajax' => array(
-            'callback' => 'ajax_experiment_list_callback'
+            'callback' => 'ajax_experiments_list_callback'
         )
     );
     if (!$url_lab_id)
@@ -49,7 +49,7 @@ function lab_migration_experiments_list($form, &$form_state)
         $form['lab_experiment_list'] = array(
             '#type' => 'item',
             '#title' => t('Title of the experiment'),
-            '#options' => _ajax_get_experiments_list($selected),
+            '#markup' => _ajax_get_experiments_list($selected),
             //'#default_value' => isset($form_state['values']['lab_experiment_list']) ? $form_state['values']['lab_experiment_list'] : '',s
             '#prefix' => '<div id="ajax_selected_experiment">',
             '#suffix' => '</div>',
@@ -88,11 +88,11 @@ function lab_migration_experiments_list($form, &$form_state)
         $form['lab_experiment_list'] = array(
             '#type' => 'item',
             '#title' => t('Titile of the experiment'),
-            '#options' => _ajax_get_experiments_list($selected),
-            '#markup' => '<div id="ajax_selected_experiment">' . _ajax_get_experiments_list($lab_default_value) . '</div>',
-            // '#default_value' => isset($form_state['values']['lab_experiment_list']) ? $form_state['values']['lab_experiment_list'] : '',
-           /* '#prefix' => '<div id="ajax_selected_experiment">',
-            '#suffix' => '</div>',*/
+            //'#options' => _ajax_get_experiments_list($selected),
+            '#markup' => _ajax_get_experiments_list($lab_default_value),
+            // '#default_value' => isset($form_state['values']['lab_experiment_list']) ? //$form_state['values']['lab_experiment_list'] : '',
+            '#prefix' => '<div id="ajax_selected_experiment">',
+            '#suffix' => '</div>',
             '#states' => array(
                 'invisible' => array(
                     ':input[name="lab"]' => array(
@@ -120,7 +120,7 @@ function lab_migration_experiments_list($form, &$form_state)
     );*/
     return $form;
   }
-function ajax_experiment_list_callback($form, $form_state)
+function ajax_experiments_list_callback($form, $form_state)
   {
     $commands = array();
     $lab_default_value = $form_state['values']['lab'];
@@ -146,17 +146,12 @@ function ajax_experiment_list_callback($form, $form_state)
             $commands[] = ajax_command_html('#ajax_selected_lab_cfd', '');
           }
         $commands[] = ajax_command_html('#ajax_lab_details', _lab_details($lab_default_value));
-        $form['lab_experiment_list']['#options'] = _ajax_get_experiments_list($lab_default_value);
+        $form['lab_experiment_list']['#markup'] = _ajax_get_experiments_list($lab_default_value);
         $commands[] = ajax_command_replace('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
-        $commands[] = ajax_command_html('#ajax_selected_solution', '');
-        $commands[] = ajax_command_html('#ajax_solution_files', '');
-        $commands[] = ajax_command_html('#ajax_download_experiment_solution', '');
-        $commands[] = ajax_command_html('#ajax_edit_experiment_solution', '');
-        $commands[] = ajax_command_html('#ajax_download_experiments', '');
       }
     else
       {
-        $form['lab_experiment_list']['#options'] = _ajax_get_experiments_list();
+        $form['lab_experiment_list']['#markup'] = _ajax_get_experiments_list();
         $commands[] = ajax_command_replace('#ajax_selected_experiment', drupal_render($form['lab_experiment_list']));
         $commands[] = ajax_command_html('#ajax_lab_details', '');
         $commands[] = ajax_command_html('#ajax_selected_lab', '');
@@ -371,16 +366,12 @@ function _ajax_get_experiments_list($lab_default_value = '')
         $pending_solution_rows[] = array(
         $lab_titles_data->lab_title,
             $experiments_data->title,
-            $lab_titles_data->name,
-            $solution_provider_user_name,
             l('View Solution', 'lab-migration/lab-migration-run/' . $lab_titles_data->id . '/' . $experiments_data->id)
         );
       }
       $header = array(
         'Title of the Lab',
         'Experiment',
-        'Proposer',
-        'Solution Provider',
         'Actions'
     );
     //$output = theme_table($header, $pending_solution_rows);
