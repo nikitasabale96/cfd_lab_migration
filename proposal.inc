@@ -227,6 +227,7 @@ function lab_migration_proposal_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Title of the Lab'),
         '#size' => 50,
+        '#maxlength' => 255,
         '#required' => TRUE
     );
     $first_experiemnt = TRUE;
