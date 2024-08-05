@@ -16,13 +16,21 @@ function lab_migration_proposal_open()
      {
     while ($proposal_data = $proposal_q->fetchObject())
       {
+        if($proposal_data->problem_statement_file == ''){
+              $problem_statement_file = "NA";
+            }
+            else{
+              $problem_statement_file = l('View', 'lab-migration/download/problem-statement/' . $proposal_data->id);
+            }
         $proposal_rows[] = array(
             l($proposal_data->lab_title, 'lab-migration/show-proposal/' . $proposal_data->id),
+            $problem_statement_file,
             l('Apply', 'lab-migration/show-proposal/' . $proposal_data->id)
         );
       }
     $proposal_header = array(
         'Title of the Lab',
+        'Problem Statement',
         'Actions'
     );
     $return_html = theme('table', array(

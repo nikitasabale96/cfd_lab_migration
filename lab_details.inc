@@ -20,10 +20,17 @@ function lab_migration_completed_labs_all()
         while ($row = $result->fetchObject())
           {
             $approval_date = date("Y", $row->approval_date);
+            if($row->problem_statement_file == ''){
+              $problem_statement_file = "NA";
+            }
+            else{
+              $problem_statement_file = l('View', 'lab-migration/download/problem-statement/' . $row->id);
+            }
             $preference_rows[] = array(
                 $i,
                 $row->university,
-                l($row->lab_title, "lab-migration/lab-migration-run/" . $row->id),
+                l($row->lab_title, "lab-migration/experiments-list/" . $row->id),
+                $problem_statement_file,
                 $approval_date
             );
             $i--;
@@ -32,6 +39,7 @@ function lab_migration_completed_labs_all()
             'No',
             'Institute',
             'Lab',
+            'Problem Statement',
             'Year'
         );
         $output .= theme('table', array(

@@ -297,6 +297,11 @@ function lab_migration_proposal_approval_form($form, $form_state)
         '#title' => t('Do you want to provide the solution'),
         '#markup' => $solution_provider
     );
+    $form['problem_statement_file'] = array(
+        '#type' =>  'item',
+        '#title' => t('Problem statement file uploaded by the proposer'),
+        '#markup' => l('View', 'lab-migration/download/problem-statement/' . $proposal_data->id)
+    );
     /* $form['solution_display'] = array(
     '#type' => 'item',
     '#title' => t('Do you want to display the solution on the www.dwsim.fossee.in website'),
@@ -861,7 +866,7 @@ function lab_migration_proposal_edit_form($form, $form_state)
         '#type' => 'textfield',
         '#title' => t('Title of the Lab'),
         '#size' => 30,
-        '#maxlength' => 50,
+        '#maxlength' => 255,
         '#required' => TRUE,
         '#default_value' => $proposal_data->lab_title
     );
@@ -941,6 +946,19 @@ function lab_migration_proposal_edit_form($form, $form_state)
             );
           }
       }
+    if(!$proposal_data->problem_statement_file){
+        $existing_uploaded_A_file = new stdClass();
+        $existing_uploaded_A_file->filename = "No file uploaded";
+    }
+    else{
+        $existing_uploaded_A_file->filename = $proposal_data->problem_statement_file;
+    }
+    $form['edit_problem_statement'] = array(
+        '#type' => 'file',
+        '#title' => t('Edit the Problem statement file'),
+        //'#required' => TRUE,
+        '#description' => t('<span style="color:red;">Current File :</span> ' . $existing_uploaded_A_file->filename . '<br />Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions: ') . variable_get('lab_migration_problem_statement_extensions', '') . '</span>',
+    );
     if ($proposal_data->solution_provider_uid == 0)
       {
         $solution_provider_user = 'Open';
@@ -1016,12 +1034,34 @@ function lab_migration_proposal_edit_form_validate($form, &$form_state)
               }
           }
       }
+       if (isset($_FILES['files']))
+    {
+        /* check for valid filename extensions */
+        foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+        {
+            if ($file_name)
+            {
+                $allowed_extensions_str = variable_get('lab_migration_problem_statement_extensions', '');
+                $allowed_extensions = explode(',', $allowed_extensions_str);
+                $fnames = explode('.', strtolower($_FILES['files']['name'][$file_form_name]));
+                $temp_extension = end($fnames);
+                if (!in_array($temp_extension, $allowed_extensions))
+                    form_set_error($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
+                if ($_FILES['files']['size'][$file_form_name] <= 0)
+                    form_set_error($file_form_name, t('File size cannot be zero.'));
+                /* check if valid file name */
+                if (!lab_migration_check_valid_filename($_FILES['files']['name'][$file_form_name]))
+                    form_set_error($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
+            } //$file_name
+        } //$_FILES['files']['name'] as $file_form_name => $file_name
+    }
     return;
   }
 function lab_migration_proposal_edit_form_submit($form, &$form_state)
   {
     global $user;
     /* get current proposal */
+    $root_path = lab_migration_path();
     $proposal_id = (int) arg(3);
     // $proposal_q = db_query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = db_select('lab_migration_proposal');
@@ -1097,17 +1137,6 @@ function lab_migration_proposal_edit_form_submit($form, &$form_state)
       }
     /* update proposal */
     $v = $form_state['values'];
-    //$query = "UPDATE {lab_migration_proposal} SET name_title = :name_title, name = :name, contact_ph = :contact_ph, department = :department, university = :unversity, lab_title = :lab_title, solution_display = :solution_display WHERE id = :id";
-    // $args= array(    
-    //    ":name_title" => $v['name_title'],
-    //    ":name" => $v['name'],
-    //    "contact_ph" => $v['contact_ph'],
-    //    ":department" => $v['department'],
-    //    ":university" => $v['university'],
-    //    ":lab_title" => $v['lab_title'],
-    //    ":solution_display" => $solution_display,
-    //    ":id" => $proposal_id,
-    //  );
     $lab_title = $v['lab_title'];
     $proposar_name = $v['name_title'] . ' ' . $v['name'];
     $university = $v['university'];
@@ -1131,9 +1160,35 @@ function lab_migration_proposal_edit_form_submit($form, &$form_state)
         'state' => $v['all_state'],
         'lab_title' => $v['lab_title'],
         'solution_display' => $solution_display,
-        'directory_name' => $directory_name
+        'directory_name' => $directory_name,
     ))->condition('id', $proposal_id);
     $result1 = $query->execute();
+    /*Updating the Problem statement file*/
+    if (isset($_FILES['files'])) {
+        foreach ($_FILES['files']['name'] as $file_form_name => $file_name) {
+            if (file_exists($root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name])) {
+                        unlink($root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name]);
+                        move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name]);
+                        drupal_set_message(t("File !filename already exists hence overwirtten the exisitng file ", array(
+                            '!filename' => $_FILES['files']['name'][$file_form_name],
+                        )), 'status');
+                    } //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+                    /* uploading file */
+                    else if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name])) {
+                        /* for uploaded files making an entry in the database */
+                            unlink($root_path . $directory_name . '/' . $proposal_data->problem_statement_file);
+                            $query = "UPDATE lab_migration_proposal SET problem_statement_file = :filename WHERE id = :proposal_id";
+                            $args = array(
+                                ":filename" => $_FILES['files']['name'][$file_form_name],
+                                ":proposal_id" => $proposal_id,
+                            );
+                            db_query($query, $args, array('return' => Database::RETURN_INSERT_ID,
+                            ));
+
+                            drupal_set_message($file_name . ' file updated successfully.', 'status');
+                        }
+                    } //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+    }
     //$result=db_query($query, $args);
     /* updating existing experiments */
     $query = db_select('lab_migration_experiment');
@@ -1172,28 +1227,6 @@ function lab_migration_proposal_edit_form_submit($form, &$form_state)
               }
           }
       }
-    /* foreach ($form_state['values']['lab_experiment']['update'] as $update_id => $update_value) {
-    if (strlen(trim($update_value)) >= 1) {
-    $description= $form_state['values']['lab_experiment_description']['update']; 
-    $query = "UPDATE {lab_migration_experiment} SET title = :title and description=:description WHERE id = :id";
-    $args = array(
-    ":title"=>  trim($update_value),
-    ":description"=>trim($description),
-    ":id"=> $update_id,
-    );
-    $result2 = db_query($query, $args);
-    if (!$result2)
-    {
-    drupal_set_message(t('Could not update Title of the Experiment : ') . trim($update_value), 'error');
-    }
-    } else {
-    $query = "DELETE FROM {lab_migration_experiment} WHERE id = :id LIMIT 1";
-    $args = array( 
-    ":id" => $update_id
-    );
-    $result3 = db_query($query, $args);
-    }
-    }*/
     /* inserting new experiments */
     $query = db_select('lab_migration_experiment');
     $query->fields('lab_migration_experiment');
@@ -1236,43 +1269,7 @@ function lab_migration_proposal_edit_form_submit($form, &$form_state)
               }
           }
       }
-    /* $query = db_select('lab_migration_experiment');
-    $query->fields('lab_migration_experiment');
-    $query->condition('proposal_id', $proposal_id);
-    $query->orderBy('number', 'DESC');
-    $query->range(0, 1);
-    $number_q = $query->execute();
-    if ($number_data = $number_q->fetchObject()) {
-    $number = (int)$number_data->number;
-    $number++;
-    } else {
-    $number = 1;
-    }
-    $insertvalue = array($insert_id => $insert_value);
-    $lab_experimentinsert = $form_state['values']['lab_experiment']['insert'];
-    $lab_exp_descriptioninsert=$form_state['values']['lab_experiment_description']['insert'];
-    if (is_array($lab_experimentinsert) || is_object($lab_experimentinsert))
-    {  
-    foreach ($lab_experimentinsert as $insertvalue) {
-    //foreach ($form_state['values']['lab_experiment']['insert'] as $insert_id => $insert_value) {
-    if (strlen(trim($insert_value)) >= 1) {
-    $query = "INSERT INTO {lab_migration_experiment} (proposal_id, number, title, description) VALUES :proposal_id, :number, :title, :description";
-    $args = array(
-    ":proposal_id" => $proposal_id, 
-    ":number" => $number, 
-    ":title" => trim($insert_value),
-    ":description"=>""
-    );
-    $result4 = db_query($query, $args);
-    if (!$result4)
-    {
-    drupal_set_message(t('Could not insert Title of the Experiment : ') . trim($insert_value), 'error');
-    } else {
-    $number++;
-    }
-    }
-    }
-    }*/
+    
     drupal_set_message(t('Proposal Updated'), 'status');
   }
 /******************************************************************************/

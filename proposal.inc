@@ -227,17 +227,19 @@ function lab_migration_proposal_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Title of the Lab'),
         '#size' => 50,
+        '#maxlength' => 255,
         '#required' => TRUE
     );
     $first_experiemnt = TRUE;
     for ($counter = 1; $counter <= 15; $counter++)
       {
-        if ($counter <= 5)
+        if ($counter <= 1)
           {
             $form['lab_experiment-' . $counter] = array(
                 '#type' => 'textfield',
                 '#title' => t('Title of the Experiment ') . $counter,
                 '#size' => 50,
+                '#required' => TRUE
             );
             $namefield = "lab_experiment-" . $counter;
             $form['lab_experiment_description-' . $counter] = array(
@@ -308,6 +310,19 @@ function lab_migration_proposal_form($form, &$form_state)
         '#description' => 'If yes, solutions will be made available to everyone for downloading.',
         '#disabled' => FALSE
     );
+    $form['problem_statement'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Problem statement for the proposed lab<span style="color:red">*</span>'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['problem_statement']['ps_file'] = array(
+      '#type' => 'file',
+      '#title' => t('<span style="color:red;font-weight:bold">NOTE: </span>Please upload a Problem Statement for each experiment proposed in a document format. To view the template of the document please click <a href="https://cfd.fossee.in/sites/default/files/Problem_Statement_Template.doc" target="_blank">here</a>'),
+      '#size' => 48,
+      '#description' => t('Only alphabets and numbers are allowed as a valid filename.') . '<br />' .
+      t('Allowed file extensions: ') . variable_get('lab_migration_problem_statement_extensions', ''),
+  );
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit')
@@ -387,10 +402,35 @@ function lab_migration_proposal_form_validate($form, &$form_state)
             form_set_error('older', t('Please provide valid version'));
           }
       }
+      if (isset($_FILES['files']))
+    {
+        /* check if atleast one source or result file is uploaded */
+        if (!($_FILES['files']['name']['ps_file']))
+            form_set_error('ps_file', t('Please upload file with the problem statement.'));
+        /* check for valid filename extensions */
+        foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+        {
+            if ($file_name)
+            {
+                $allowed_extensions_str = variable_get('lab_migration_problem_statement_extensions', '');
+                $allowed_extensions = explode(',', $allowed_extensions_str);
+                $fnames = explode('.', strtolower($_FILES['files']['name'][$file_form_name]));
+                $temp_extension = end($fnames);
+                if (!in_array($temp_extension, $allowed_extensions))
+                    form_set_error($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
+                if ($_FILES['files']['size'][$file_form_name] <= 0)
+                    form_set_error($file_form_name, t('File size cannot be zero.'));
+                /* check if valid file name */
+                if (!lab_migration_check_valid_filename($_FILES['files']['name'][$file_form_name]))
+                    form_set_error($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
+            } //$file_name
+        } //$_FILES['files']['name'] as $file_form_name => $file_name
+    } 
     return;
   }
 function lab_migration_proposal_form_submit($form, &$form_state)
   {
+    $root_path = lab_migration_path();
     global $user;
     if (!$user->uid)
       {
@@ -442,11 +482,11 @@ function lab_migration_proposal_form_submit($form, &$form_state)
     $university = $v['university'];    
     $directory_name = _lm_dir_name($lab_title, $proposar_name, $university);
     $result = "INSERT INTO {lab_migration_proposal} 
-    (uid, approver_uid, name_title, name, contact_ph, department, university, city, pincode, state, country, version, lab_title, approval_status, solution_status, solution_provider_uid, solution_display, creation_date, approval_date, solution_date, solution_provider_name_title, solution_provider_name, solution_provider_contact_ph, solution_provider_department, solution_provider_university, solution_provider_city, solution_provider_country, solution_provider_state, solution_provider_pincode, directory_name) VALUES
+    (uid, approver_uid, name_title, name, contact_ph, department, university, city, pincode, state, country, version, lab_title, approval_status, solution_status, solution_provider_uid, solution_display, creation_date, approval_date, solution_date, solution_provider_name_title, solution_provider_name, solution_provider_contact_ph, solution_provider_department, solution_provider_university, solution_provider_city, solution_provider_country, solution_provider_state, solution_provider_pincode, directory_name,problem_statement_file) VALUES
     (:uid, :approver_uid, :name_title, :name, :contact_ph, :department, :university, :city, :pincode, :state, :country,
      :version, :lab_title, :approval_status, :solution_status, :solution_provider_uid, :solution_display, :creation_date, 
      :approval_date, :solution_date, :solution_provider_name_title, :solution_provider_name,
-      :solution_provider_contact_ph, :solution_provider_department, :solution_provider_university, :solution_provider_city, :solution_provider_country, :solution_provider_state, :solution_provider_pincode, :directory_name)";
+      :solution_provider_contact_ph, :solution_provider_department, :solution_provider_university, :solution_provider_city, :solution_provider_country, :solution_provider_state, :solution_provider_pincode, :directory_name, :problem_statement_file)";
     $args = array(
         ":uid" => $user->uid,
         ":approver_uid" => 0,
@@ -477,11 +517,45 @@ function lab_migration_proposal_form_submit($form, &$form_state)
         ":solution_provider_country" => $solution_provider_country,
         ":solution_provider_state" => $solution_provider_state,
         ":solution_provider_pincode" => $solution_provider_pincode,
-        ":directory_name" => $directory_name
+        ":directory_name" => $directory_name,
+        ":problem_statement_file" => ""
     );
     $proposal_id = db_query($result, $args, array(
         'return' => Database::RETURN_INSERT_ID
     ));
+    $dest_path = $directory_name . '/';
+    if (!is_dir($root_path . $dest_path))
+        mkdir($root_path . $dest_path);
+    /* uploading files */
+    foreach ($_FILES['files']['name'] as $file_form_name => $file_name)
+    {
+        if ($file_name)
+        {
+            /* checking file type */
+            //$file_type = 'S';
+            if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
+            {
+                 drupal_set_message(t("Error uploading file. File !filename already exists.", array('!filename' => $_FILES['files']['name'][$file_form_name])), 'error');
+                //unlink($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]);
+            } //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+            /* uploading file */
+            if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name]))
+            {
+                $query = "UPDATE lab_migration_proposal SET problem_statement_file = :problem_statement_file WHERE id = :id";
+                $args = array(
+                    ":problem_statement_file" => $_FILES['files']['name'][$file_form_name],
+                    ":id" => $proposal_id
+                );
+                
+                $updateresult = db_query($query, $args);
+                drupal_set_message($file_name . ' uploaded successfully.', 'status');
+            } //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
+            else
+            {
+                drupal_set_message('Error uploading file : ' . $dest_path . $file_name, 'error');
+            }
+        } //$file_name
+    }
     if (!$proposal_id)
       {
         drupal_set_message(t('Error receiving your proposal. Please try again.'), 'error');
