@@ -332,9 +332,9 @@ class LabMigrationSolutionProposalForm extends FormBase {
     \Drupal::messenger()->addmessage("We have received your application. We will get back to you soon.", 'status');
     /* sending email */
     $email_to = $user->mail;
-    $from = variable_get('lab_migration_from_email', '');
-    $bcc = variable_get('lab_migration_emails', '');
-    $cc = variable_get('lab_migration_cc_emails', '');
+    $from = $config->get('lab_migration_from_email', '');
+    $bcc = $config->get('lab_migration_emails', '');
+    $cc = $config->get('lab_migration_cc_emails', '');
     $param['solution_proposal_received']['proposal_id'] = $proposal_id;
     $param['solution_proposal_received']['user_id'] = $user->uid;
     $param['solution_proposal_received']['headers'] = [
@@ -350,8 +350,8 @@ class LabMigrationSolutionProposalForm extends FormBase {
       \Drupal::messenger()->addmessage('Error sending email message.', 'error');
     }
     /* sending email */
-    /* $email_to = variable_get('lab_migration_emails', '');
-    if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to , language_default(), $param, variable_get('lab_migration_from_email', NULL), TRUE))
+    /* $email_to = $config->get('lab_migration_emails', '');
+    if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to , language_default(), $param, $config->get('lab_migration_from_email', NULL), TRUE))
     \Drupal::messenger()->addmessage('Error sending email message.', 'error');*/
     drupal_goto('lab-migration/open-proposal');
   }

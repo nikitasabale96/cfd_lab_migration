@@ -22,7 +22,7 @@ class LabMigrationRunForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
 
-    $options_two = _ajax_get_experiment_list();
+    $options_two = $this->_ajax_get_experiment_list();
     $select_two = !$form_state->getValue(['lab_experiment_list']) ? $form_state->getValue(['lab_experiment_list']) : key($options_two);
     $url_lab_id = (int) arg(2);
     $url_experiment_id = (int) arg(3);
@@ -207,6 +207,23 @@ class LabMigrationRunForm extends FormBase {
     ];
     //}
     return $form;
+  }
+  public function _ajax_get_experiment_list($lab_default_value = '')
+  {
+    $experiments = array(
+        '0' => 'Please select...'
+    );
+    //$experiments_q = db_query("SELECT * FROM {lab_migration_experiment} WHERE proposal_id = %d ORDER BY number ASC", $proposal_id);
+    $query = \Drupal::database()->select('lab_migration_experiment');
+    $query->fields('lab_migration_experiment');
+    $query->condition('proposal_id', $lab_default_value);
+    $query->orderBy('number', 'ASC');
+    $experiments_q = $query->execute();
+    while ($experiments_data = $experiments_q->fetchObject())
+      {
+        $experiments[$experiments_data->id] = $experiments_data->number . '. ' . $experiments_data->title;
+      }
+    return $experiments;
   }
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
   }

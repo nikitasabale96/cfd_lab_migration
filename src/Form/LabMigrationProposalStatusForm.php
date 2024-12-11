@@ -10,6 +10,12 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\user\Entity\User;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
 
 class LabMigrationProposalStatusForm extends FormBase {
 
@@ -23,7 +29,10 @@ class LabMigrationProposalStatusForm extends FormBase {
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -35,23 +44,29 @@ class LabMigrationProposalStatusForm extends FormBase {
       }
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal');
+        // drupal_goto('lab-migration/manage-proposal');
+//         $url = Url::fromRoute('lab_migration.manage_proposal')->toString();
+// $response = new RedirectResponse($url);
+// $response->send();
+
         return;
       }
     }
     else {
       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal');
+      // drupal_goto('lab-migration/manage-proposal');
       return;
     }
     $form['name'] = [
       '#type' => 'item',
-      '#markup' => l($proposal_data->name_title . ' ' . $proposal_data->name, 'user/' . $proposal_data->uid),
+      // '#markup' => l($proposal_data->name_title . ' ' . $proposal_data->name, 'user/' . $proposal_data->uid),
+      '#markup' => Link::fromTextAndUrl($proposal_data->name_title . ' ' . $proposal_data->name,Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid]))->toString(),
+
       '#title' => t('Name'),
     ];
     $form['email_id'] = [
       '#type' => 'item',
-      '#markup' => user_load($proposal_data->uid)->mail,
+      '#markup' => User::load($proposal_data->uid)->mail,
       '#title' => t('Email'),
     ];
     $form['contact_ph'] = [
@@ -141,6 +156,7 @@ class LabMigrationProposalStatusForm extends FormBase {
       '#markup' => $proposal_status,
       '#title' => t('Proposal Status'),
     ];
+    // var_dump($proposal_status);die;
     if ($proposal_data->approval_status == 0) {
       $form['approve'] = [
         '#type' => 'item',
@@ -148,6 +164,7 @@ class LabMigrationProposalStatusForm extends FormBase {
         '#title' => t('Approve'),
       ];
     }
+    var_dump($proposal_data);die;
     if ($proposal_data->approval_status == 1) {
       $form['completed'] = [
         '#type' => 'checkbox',
@@ -162,13 +179,14 @@ class LabMigrationProposalStatusForm extends FormBase {
         '#title' => t('Reason for disapproval'),
       ];
     }
+    // var_dump($proposal_data);die;
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
     $form['cancel'] = [
       '#type' => 'markup',
-      '#markup' => l(t('Cancel'), 'lab-migration/manage-proposal/all'),
+      '#markup' => Link::fromTextAndUrl(t('Cancel'), Url::fromRoute('lab_migration.proposal_all'))->toString(),
     ];
     return $form;
   }
@@ -176,25 +194,34 @@ class LabMigrationProposalStatusForm extends FormBase {
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('id');
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
+    // var_dump($proposal_q);die;
+
     if ($proposal_q) {
       if ($proposal_data = $proposal_q->fetchObject()) {
         /* everything ok */
       }
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal');
+        // drupal_goto('lab-migration/manage-proposal');
+        $response = new RedirectResponse('/lab-migration/manage-proposal/pening-solution');
+         $response->send(); 
         return;
       }
     }
     else {
       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal');
+      // drupal_goto('lab-migration/manage-proposal');
+      $response = new RedirectResponse('/lab-migration/manage-proposal/pening-solution');
+      $response->send(); 
       return;
     }
     /* set the book status to completed */
@@ -206,37 +233,40 @@ class LabMigrationProposalStatusForm extends FormBase {
         ":expected_completion_date" => time(),
       ];
       $result = \Drupal::database()->query($up_query, $args);
-      CreateReadmeFileLabMigration($proposal_id);
+      \Drupal::service("lab_migration_global")->CreateReadmeFileLabMigration($proposal_id);
       if (!$result) {
         \Drupal::messenger()->addmessage('Error in update status', 'error');
         return;
       }
       /* sending email */
-      $user_data = user_load($proposal_data->uid);
-      $email_to = $user_data->mail;
-      $from = variable_get('lab_migration_from_email', '');
-      $bcc = $user->mail . ', ' . variable_get('lab_migration_emails', '');
-      $cc = variable_get('lab_migration_cc_emails', '');
-      $param['proposal_completed']['proposal_id'] = $proposal_id;
-      $param['proposal_completed']['user_id'] = $proposal_data->uid;
-      $param['proposal_completed']['headers'] = [
-        'From' => $from,
-        'MIME-Version' => '1.0',
-        'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-        'Content-Transfer-Encoding' => '8Bit',
-        'X-Mailer' => 'Drupal',
-        'Cc' => $cc,
-        'Bcc' => $bcc,
-      ];
-      if (!drupal_mail('lab_migration', 'proposal_completed', $email_to, language_default(), $param, $from, TRUE)) {
-        \Drupal::messenger()->addmessage('Error sending email message.', 'error');
-      }
-      /*$email_to = $user->mail . ', ' . variable_get('lab_migration_emails', '');;
-        if (!drupal_mail('lab_migration', 'proposal_completed', $email_to , language_default(), $param, variable_get('lab_migration_from_email', NULL), TRUE))
+      // $user_data = user_load($proposal_data->uid);
+      // $email_to = $user_data->mail;
+      // $from = $config->get('lab_migration_from_email', '');
+      // $bcc = $user->mail . ', ' . $config->get('lab_migration_emails', '');
+      // $cc = $config->get('lab_migration_cc_emails', '');
+      // $param['proposal_completed']['proposal_id'] = $proposal_id;
+      // $param['proposal_completed']['user_id'] = $proposal_data->uid;
+      // $param['proposal_completed']['headers'] = [
+      //   'From' => $from,
+      //   'MIME-Version' => '1.0',
+      //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+      //   'Content-Transfer-Encoding' => '8Bit',
+      //   'X-Mailer' => 'Drupal',
+      //   'Cc' => $cc,
+      //   'Bcc' => $bcc,
+      // ];
+      // if (!drupal_mail('lab_migration', 'proposal_completed', $email_to, language_default(), $param, $from, TRUE)) {
+      //   \Drupal::messenger()->addmessage('Error sending email message.', 'error');
+      // }
+      /*$email_to = $user->mail . ', ' . $config->get('lab_migration_emails', '');;
+        if (!drupal_mail('lab_migration', 'proposal_completed', $email_to , language_default(), $param, $config->get('lab_migration_from_email', NULL), TRUE))
         \Drupal::messenger()->addmessage('Error sending email message.', 'error');*/
       \Drupal::messenger()->addmessage('Congratulations! Lab Migration proposal has been marked as completed. User has been notified of the completion.', 'status');
     }
-    drupal_goto('lab-migration/manage-proposal');
+    $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_all')->toString());
+  
+    // //   // Send the redirect response
+      $response->send();
     return;
   }
 

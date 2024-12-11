@@ -10,6 +10,8 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class LabMigrationBulkUploadCodeForm extends FormBase {
 
@@ -22,8 +24,11 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $proposal_id = (int) arg(3);
-    //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('proposal_id');
+    //$proposal_q = $injected_database->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
@@ -31,7 +36,10 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addmessage("Invalid proposal selected", 'error');
-      drupal_goto('lab_migration/code_approval/bulk');
+      // RedirectResponse('lab_migration/code_approval/bulk');
+      $url = Url::fromRoute('lab_migration.code_approval')->toString();
+$response = new RedirectResponse($url);
+$response->send();
     }
     /* add javascript for dependency selection effects */
     $dep_selection_js = "(function ($) {
@@ -40,7 +48,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       /* showing and hiding relevant files */
       $('.form-checkboxes .option').hide();
       $('.form-checkboxes .option').each(function(index) {
-        var activeClass = $('#edit-existing-depfile-dep-lab-title').val();
+        var activeClass = $('#edit-existing-depfile-dep-lab-title').va\Drupal\Core\Link;
         if ($(this).children().hasClass(activeClass)) {
           $(this).show();
         }
@@ -57,7 +65,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     });
     $('#edit-existing-depfile-dep-lab-title').trigger('change');
   })(jQuery);";
-    drupal_add_js($dep_selection_js, 'inline', 'header');
+    #attached($dep_selection_js, 'inline', 'header');
     $form['#attributes'] = ['enctype' => "multipart/form-data"];
     $form['lab_title'] = [
       '#type' => 'item',
@@ -71,8 +79,8 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     ];
     /* get experiment list */
     $experiment_rows = [];
-    //$experiment_q = \Drupal::database()->query("SELECT * FROM {lab_migration_experiment} WHERE proposal_id = %d ORDER BY id ASC", $proposal_data->id);
-    $query = \Drupal::database()->select('lab_migration_experiment');
+    //$experiment_q = $injected_database->query("SELECT * FROM {lab_migration_experiment} WHERE proposal_id = %d ORDER BY id ASC", $proposal_data->id);
+    $query = $injected_database->select('lab_migration_experiment');
     $query->fields('lab_migration_experiment');
     $query->condition('proposal_id', $proposal_data->id);
     $query->orderBy('id', 'ASC');
@@ -120,7 +128,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       '#type' => 'file',
       '#title' => t('Upload main or source file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . variable_get('lab_migration_source_extensions', ''),
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . $config->get('lab_migration_source_extensions', ''),
     ];
     $form['dep_files'] = [
       '#type' => 'item',
@@ -158,7 +166,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     ];
     $form['existing_depfile']['dep_upload'] = [
       '#type' => 'item',
-      '#value' => l('Upload New Depedency Files', 'lab_migration/code/upload_dep'),
+      '#value' => Link::fromTextAndUrl('Upload New Depedency Files', 'lab_migration/code/upload_dep'),
     ];
     /************ END OF EXISTING DEPENDENCIES **************/
     $form['result'] = [
@@ -171,13 +179,13 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       '#type' => 'file',
       '#title' => t('Upload result file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . variable_get('lab_migration_result_extensions', ''),
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . $config->get('lab_migration_result_extensions', ''),
     ];
     $form['result']['result2'] = [
       '#type' => 'file',
       '#title' => t('Upload result file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . variable_get('lab_migration_result_extensions', ''),
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . $config->get('lab_migration_result_extensions', ''),
     ];
     $form['xcos'] = [
       '#type' => 'fieldset',
@@ -189,21 +197,22 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       '#type' => 'file',
       '#title' => t('Upload xcos file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . variable_get('lab_migration_xcos_extensions', ''),
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . $config->get('lab_migration_xcos_extensions', ''),
     ];
     $form['xcos']['xcos2'] = [
       '#type' => 'file',
       '#title' => t('Upload xcos file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . variable_get('lab_migration_xcos_extensions', ''),
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions : ') . $config->get('lab_migration_xcos_extensions', ''),
     ];
+    
     $form['submit'] = [
-      '#type' => 'submit',
+      '#type' =>'submit',
       '#value' => t('Submit'),
     ];
     $form['cancel'] = [
       '#type' => 'markup',
-      '#value' => l(t('Cancel'), 'lab_migration/code_approval/bulk'),
+      '#value' => Link::fromTextAndUrl(t('Cancel'), 'lab_migration/code_approval/bulk'),
     ];
     return $form;
   }
@@ -243,13 +252,13 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
           $allowed_extensions_str = '';
           switch ($file_type) {
             case 'S':
-              $allowed_extensions_str = variable_get('lab_migration_source_extensions', '');
+              $allowed_extensions_str = $config->get('lab_migration_source_extensions', '');
               break;
             case 'R':
-              $allowed_extensions_str = variable_get('lab_migration_result_extensions', '');
+              $allowed_extensions_str = $config->get('lab_migration_result_extensions', '');
               break;
             case 'X':
-              $allowed_extensions_str = variable_get('lab_migration_xcos_extensions', '');
+              $allowed_extensions_str = $config->get('lab_migration_xcos_extensions', '');
               break;
           }
           $allowed_extensions = explode(',', $allowed_extensions_str);
@@ -274,7 +283,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       /* showing and hiding relevant files */
       $('.form-checkboxes .option').hide();
       $('.form-checkboxes .option').each(function(index) {
-        var activeClass = $('#edit-existing-depfile-dep-lab-title').val();
+        var activeClass = $('#edit-existing-depfile-dep-lab-title').va\Drupal\Core\Link;
         if ($(this).children().hasClass(activeClass)) {
           $(this).show();
         }
@@ -291,28 +300,28 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     });
     $('#edit-existing-depfile-dep-lab-title').trigger('change');
   }(jQuery));";
-    drupal_add_js($dep_selection_js, 'inline', 'header');
+    #attached($dep_selection_js, 'inline', 'header');
   }
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     $root_path = lab_migration_path();
     $proposal_id = (int) arg(3);
-    //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
-    $query = \Drupal::database()->select('lab_migration_proposal');
+    //$proposal_q = $injected_database->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
+    $query = $injected_database->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data) {
-      \Drupal::messenger()->addmessage("Invalid proposal selected", 'error');
-      drupal_goto('lab_migration/code_approval/upload/' . $proposal_id);
+      add_message("Invalid proposal selected", 'error');
+      RedirectResponse('lab_migration/code_approval/upload/' . $proposal_id);
     }
     $proposal_id = $proposal_data->id;
     /************************ check experiment details ************************/
     $experiment_id = (int) $form_state->getValue(['experiment']);
-    //$experiment_q = \Drupal::database()->query("SELECT * FROM {lab_migration_experiment} WHERE id = %d AND proposal_id = %d LIMIT 1", $experiment_id, $proposal_id);
-    $query = \Drupal::database()->select('lab_migration_experiment');
+    //$experiment_q = $injected_database->query("SELECT * FROM {lab_migration_experiment} WHERE id = %d AND proposal_id = %d LIMIT 1", $experiment_id, $proposal_id);
+    $query = $injected_database->select('lab_migration_experiment');
     $query->fields('lab_migration_experiment');
     $query->condition('id', $experiment_id);
     $query->condition('proposal_id', $proposal_id);
@@ -320,8 +329,8 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
     $experiment_q = $query->execute();
     $experiment_data = $experiment_q->fetchObject();
     if (!$experiment_data) {
-      \Drupal::messenger()->addmessage("Invalid experiment seleted", 'error');
-      drupal_goto('lab_migration/code_approval/upload/' . $proposal_id);
+      add_message("Invalid experiment seleted", 'error');
+      RedirectResponse('lab_migration/code_approval/upload/' . $proposal_id);
     }
     /* create proposal folder if not present */
     $dest_path = $proposal_id . '/';
@@ -329,28 +338,28 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       mkdir($root_path . $dest_path);
     }
     /*  get solution details - dont allow if already solution present */
-    // $cur_solution_q = \Drupal::database()->query("SELECT * FROM {lab_migration_solution} WHERE experiment_id = %d AND code_number = '%s'", $experiment_id, $experiment_data->number . '.' . $form_state['values']['code_number']);
+    // $cur_solution_q = $injected_database->query("SELECT * FROM {lab_migration_solution} WHERE experiment_id = %d AND code_number = '%s'", $experiment_id, $experiment_data->number . '.' . $form_state['values']['code_number']);
     $code_number = $experiment_data->number . '.' . $form_state->getValue(['code_number']);
-    $query = \Drupal::database()->select('lab_migration_solution');
+    $query = $injected_database->select('lab_migration_solution');
     $query->fields('lab_migration_solution');
     $query->condition('experiment_id', $experiment_id);
     $query->condition('code_number', $code_number);
     $cur_solution_q = $query->execute();
     if ($cur_solution_d = $cur_solution_q->fetchObject()) {
       if ($cur_solution_d->approval_status == 1) {
-        \Drupal::messenger()->addmessage(t("Solution already approved. Cannot overwrite it."), 'error');
-        drupal_goto('lab_migration/code_approval/upload/' . $proposal_id);
+        add_message(t("Solution already approved. Cannot overwrite it."), 'error');
+        RedirectResponse('lab_migration/code_approval/upload/' . $proposal_id);
         return;
       }
       else {
         if ($cur_solution_d->approval_status == 0) {
-          \Drupal::messenger()->addmessage(t("Solution is under pending review. Delete the solution and reupload it."), 'error');
-          drupal_goto('lab-migration/code-approval/upload/' . $proposal_id);
+          add_message(t("Solution is under pending review. Delete the solution and reupload it."), 'error');
+          RedirectResponse('lab-migration/code-approval/upload/' . $proposal_id);
           return;
         }
         else {
-          \Drupal::messenger()->addmessage(t("Error uploading solution. Please contact administrator."), 'error');
-          drupal_goto('lab-migration/code-approval/upload/' . $proposal_id);
+          add_message(t("Error uploading solution. Please contact administrator."), 'error');
+          RedirectResponse('lab-migration/code-approval/upload/' . $proposal_id);
           return;
         }
       }
@@ -376,7 +385,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       ":approval_status" => 0,
       ":timestamp" => time(),
     ];
-    $solution_id = \Drupal::database()->query($query, $args, [
+    $solution_id = $injected_database->query($query, $args, [
       'return' => Database::RETURN_INSERT_ID
       ]);
     /* linking existing dependencies */
@@ -389,7 +398,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
           ":solution_id" => $solution_id,
           ":dependency_id" => $row,
         ];
-        \Drupal::database()->query($query, $args);
+        $injected_database->query($query, $args);
       }
     }
     /* uploading files */
@@ -413,7 +422,7 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
           }
         }
         if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
-          \Drupal::messenger()->addmessage(t("Error uploading file. File !filename already exists.", [
+          add_message(t("Error uploading file. File !filename already exists.", [
             '!filename' => $_FILES['files']['name'][$file_form_name]
             ]), 'error');
           return;
@@ -432,20 +441,20 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
             ":filetype" => $file_type,
             ":timestamp" => time(),
           ];
-          \Drupal::database()->query($query, $args);
-          \Drupal::messenger()->addmessage($file_name . ' uploaded successfully.', 'status');
+          $injected_database->query($query, $args);
+          add_message($file_name . ' uploaded successfully.', 'status');
         }
         else {
-          \Drupal::messenger()->addmessage('Error uploading file : ' . $dest_path . '/' . $file_name, 'error');
+          add_message('Error uploading file : ' . $dest_path . '/' . $file_name, 'error');
         }
       }
     }
-    \Drupal::messenger()->addmessage('Solution uploaded successfully.', 'status');
+    add_message('Solution uploaded successfully.', 'status');
     /* sending email */
     $email_to = $user->mail;
-    $from = variable_get('lab_migration_from_email', '');
-    $bcc = variable_get('lab_migration_emails', '');
-    $cc = variable_get('lab_migration_cc_emails', '');
+    $from = $config->get('lab_migration_from_email', '');
+    $bcc = $config->get('lab_migration_emails', '');
+    $cc = $config->get('lab_migration_cc_emails', '');
     $param['solution_uploaded']['solution_id'] = $solution_id;
     $param['solution_uploaded']['user_id'] = $user->uid;
     $param['solution_uploaded']['headers'] = [
@@ -458,9 +467,9 @@ class LabMigrationBulkUploadCodeForm extends FormBase {
       'Bcc' => $bcc,
     ];
     if (!drupal_mail('lab_migration', 'solution_uploaded', $email_to, language_default(), $param, $from, TRUE)) {
-      \Drupal::messenger()->addmessage('Error sending email message.', 'error');
+      add_message('Error sending email message.', 'error');
     }
-    drupal_goto('lab-migration/code-approval/bulk/');
+    RedirectResponse('lab-migration/code-approval/bulk/');
   }
 
 }

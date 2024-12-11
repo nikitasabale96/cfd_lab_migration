@@ -10,7 +10,10 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\user\Entity\User;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
 class LabMigrationProposalEditForm extends FormBase {
 
   /**
@@ -23,7 +26,10 @@ class LabMigrationProposalEditForm extends FormBase {
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -35,16 +41,23 @@ class LabMigrationProposalEditForm extends FormBase {
       }
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal');
+        // RedirectResponse('lab-migration/manage-proposal');
+        
+
+return new RedirectResponse('/lab-migration/manage-proposal/pending');
+
         return;
       }
     }
     else {
-      \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal');
-      return;
+       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
+      // RedirectResponse('lab-migration/manage-proposal');
+      return new RedirectResponse('/lab-migration/manage-proposal/pending');
+
+      // return;
     }
-    $user_data = user_load($proposal_data->uid);
+    $user_data = User::load($proposal_data->uid);
+    //var_dump($user_data->getEmail());die;
     $form['name_title'] = [
       '#type' => 'select',
       '#title' => t('Title'),
@@ -69,7 +82,7 @@ class LabMigrationProposalEditForm extends FormBase {
     $form['email_id'] = [
       '#type' => 'item',
       '#title' => t('Email'),
-      '#markup' => $user_data->mail,
+      '#markup' => $user_data->getEmail(),
     ];
     $form['contact_ph'] = [
       '#type' => 'textfield',
@@ -82,7 +95,7 @@ class LabMigrationProposalEditForm extends FormBase {
     $form['department'] = [
       '#type' => 'select',
       '#title' => t('Department/Branch'),
-      '#options' => _lm_list_of_departments(),
+      '#options' =>  \Drupal::service("lab_migration_global")->_lm_list_of_departments(),
       '#required' => TRUE,
       '#default_value' => $proposal_data->department,
     ];
@@ -157,7 +170,7 @@ class LabMigrationProposalEditForm extends FormBase {
     $form['all_state'] = [
       '#type' => 'select',
       '#title' => t('State'),
-      '#options' => _lm_list_of_states(),
+      '#options' => \Drupal::service("lab_migration_global")->_lm_list_of_states(),
       '#default_value' => $proposal_data->state,
       '#validated' => TRUE,
       '#states' => [
@@ -171,7 +184,7 @@ class LabMigrationProposalEditForm extends FormBase {
     $form['city'] = [
       '#type' => 'select',
       '#title' => t('City'),
-      '#options' => _lm_list_of_cities(),
+      '#options' => \Drupal::service("lab_migration_global")->_lm_list_of_cities(),
       '#default_value' => $proposal_data->city,
       '#states' => [
         'visible' => [
@@ -191,10 +204,17 @@ class LabMigrationProposalEditForm extends FormBase {
         'placeholder' => 'Insert pincode of your city/ village....'
         ],
     ];
+    $form['operating_system'] = [
+      '#type' => 'textfield',
+      '#default_value' => $proposal_data->operating_system,
+      '#title' => t('Operating System'),
+    ];
+   
+   
     $form['lab_title'] = [
       '#type' => 'textfield',
       '#title' => t('Title of the Lab'),
-      '#size' => 30,
+      '#size' => 100,
       '#maxlength' => 255,
       '#required' => TRUE,
       '#default_value' => $proposal_data->lab_title,
@@ -206,7 +226,6 @@ class LabMigrationProposalEditForm extends FormBase {
     $query->condition('proposal_id', $proposal_id);
     $query->orderBy('id', 'ASC');
     $experiment_q = $query->execute();
-    $experiment_q_count = $experiment_q->rowCount();
     /*$form['lab_experiment'] = array(
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
@@ -235,7 +254,7 @@ class LabMigrationProposalEditForm extends FormBase {
         $form['lab_experiment_update' . $experiment_data->id] = [
           '#type' => 'textfield',
           '#title' => t('Title of the Experiment ') . $counter,
-          '#size' => 50,
+          '#size' => 100,
           '#default_value' => $experiment_title,
         ];
         $namefield = "lab_experiment_update" . $experiment_data->id;
@@ -252,8 +271,9 @@ class LabMigrationProposalEditForm extends FormBase {
         $form['lab_experiment_insert' . $counter] = [
           '#type' => 'textfield',
           '#title' => t('Title of the Experiment ') . $counter,
-          '#size' => 50,
+          '#size' => 100,
           '#required' => FALSE,
+          '#default_value' => $experiment_title,
         ];
         $namefield = "lab_experiment_insert" . $counter;
         $form['lab_experiment_description_insert' . $counter] = [
@@ -272,19 +292,6 @@ class LabMigrationProposalEditForm extends FormBase {
         ];
       }
     }
-    if (!$proposal_data->problem_statement_file) {
-      $existing_uploaded_A_file = new stdClass();
-      $existing_uploaded_A_file->filename = "No file uploaded";
-    }
-    else {
-      $existing_uploaded_A_file->filename = $proposal_data->problem_statement_file;
-    }
-    $form['edit_problem_statement'] = [
-      '#type' => 'file',
-      '#title' => t('Edit the Problem statement file'),
-      //'#required' => TRUE,
-        '#description' => t('<span style="color:red;">Current File :</span> ' . $existing_uploaded_A_file->filename . '<br />Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('<span style="color:red;">Allowed file extensions: ') . variable_get('lab_migration_problem_statement_extensions', '') . '</span>',
-    ];
     if ($proposal_data->solution_provider_uid == 0) {
       $solution_provider_user = 'Open';
     }
@@ -293,12 +300,12 @@ class LabMigrationProposalEditForm extends FormBase {
         $solution_provider_user = 'Proposer';
       }
       else {
-        $user_data = user_load($proposal_data->solution_provider_uid);
+        $user_data = User::load($proposal_data->solution_provider_uid);
         if (!$user_data) {
-          $solution_provider_user = 1;
+          $solution_provider_user = 'NA';
           \Drupal::messenger()->addmessage('Solution provider user name is invalid', 'error');
         }
-        $solution_provider_user = $user_data->name;
+        $solution_provider_user = $proposal_data->soultion_provider_name;
       }
     }
     $form['solution_provider_uid'] = [
@@ -312,7 +319,7 @@ class LabMigrationProposalEditForm extends FormBase {
     ];
     $form['solution_display'] = [
       '#type' => 'hidden',
-      '#title' => t('Do you want to display the solution on the www.cfd.fossee.in website'),
+      '#title' => t('Do you want to display the solution on the www.r.fossee.in website'),
       '#options' => [
         '1' => 'Yes'
         ],
@@ -330,13 +337,17 @@ class LabMigrationProposalEditForm extends FormBase {
     ];
     $form['cancel'] = [
       '#type' => 'item',
-      '#markup' => l(t('Cancel'), 'lab-migration/manage-proposal'),
+      // '#markup' => Link::fromTextAndUrl(t('Cancel'), 'lab-migration/manage-proposal'),
+      '#markup' => Link::fromTextAndUrl(t('Cancel'), Url::fromRoute('lab_migration.proposal_all'))->toString(),
     ];
     return $form;
   }
 
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
     /* check before delete proposal */
     if ($form_state->getValue(['delete_proposal']) == 1) {
       //$experiment_q = \Drupal::database()->query("SELECT * FROM {lab_migration_experiment} WHERE proposal_id = %d", $proposal_id);
@@ -355,35 +366,16 @@ class LabMigrationProposalEditForm extends FormBase {
         }
       }
     }
-    if (isset($_FILES['files'])) {
-      /* check for valid filename extensions */
-      foreach ($_FILES['files']['name'] as $file_form_name => $file_name) {
-        if ($file_name) {
-          $allowed_extensions_str = variable_get('lab_migration_problem_statement_extensions', '');
-          $allowed_extensions = explode(',', $allowed_extensions_str);
-          $fnames = explode('.', strtolower($_FILES['files']['name'][$file_form_name]));
-          $temp_extension = end($fnames);
-          if (!in_array($temp_extension, $allowed_extensions)) {
-            $form_state->setErrorByName($file_form_name, t('Only file with ' . $allowed_extensions_str . ' extensions can be uploaded.'));
-          }
-          if ($_FILES['files']['size'][$file_form_name] <= 0) {
-            $form_state->setErrorByName($file_form_name, t('File size cannot be zero.'));
-          }
-          /* check if valid file name */
-          if (!lab_migration_check_valid_filename($_FILES['files']['name'][$file_form_name])) {
-            $form_state->setErrorByName($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
-          }
-        } //$file_name
-      } //$_FILES['files']['name'] as $file_form_name => $file_name
-    }
     return;
   }
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $root_path = lab_migration_path();
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('id');
     // $proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -394,28 +386,39 @@ class LabMigrationProposalEditForm extends FormBase {
         /* everything ok */
       }
       else {
-        \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal');
+         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
+        // RedirectResponse('lab-migration/manage-proposal');
+        $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_all')->toString());
+        // Send the redirect response
+           $response->send();
         return;
       }
     }
     else {
-      \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal');
+       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
+      // RedirectResponse('lab-migration/manage-proposal/pending');
+      $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_all')->toString());
+      // Send the redirect response
+         $response->send();
       return;
     }
     /* delete proposal */
     if ($form_state->getValue(['delete_proposal']) == 1) {
       //\Drupal::database()->query("DELETE FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
-      $query = db_delete('lab_migration_proposal');
+      $query = \Drupal::database()->delete('lab_migration_proposal');
       $query->condition('id', $proposal_id);
       $num_deleted = $query->execute();
       //\Drupal::database()->query("DELETE FROM {lab_migration_experiment} WHERE proposal_id = %d", $proposal_id);
-      $query = db_delete('lab_migration_experiment');
+      $query = \Drupal::database()->delete('lab_migration_experiment');
       $query->condition('proposal_id', $proposal_id);
       $num_deleted = $query->execute();
       \Drupal::messenger()->addmessage(t('Proposal Delete'), 'status');
-      drupal_goto('lab-migration/manage-proposal');
+      // RedirectResponse('lab-migration/manage-proposal');
+      // $url = Url::fromRoute('lab_migration/manage-proposal/pending')->toString();
+    // Redirect to the URL.
+    $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_all')->toString());
+      // Send the redirect response
+         $response->send();
       return;
     }
     if ($form_state->getValue(['open_solution']) == 1) {
@@ -436,7 +439,7 @@ class LabMigrationProposalEditForm extends FormBase {
         'solution_provider_university' => '',
       ])->condition('id', $proposal_id)->execute();
       if (!$result) {
-        \Drupal::messenger()->addmessage(t('Solution already open for everyone.'), 'error');
+       \Drupal::messenger()->addmessage(t('Solution already open for everyone.'), 'error');
         return;
       }
     }
@@ -449,16 +452,29 @@ class LabMigrationProposalEditForm extends FormBase {
     }
     /* update proposal */
     $v = $form_state->getValues();
+    //$query = "UPDATE {lab_migration_proposal} SET name_title = :name_title, name = :name, contact_ph = :contact_ph, department = :department, university = :unversity, lab_title = :lab_title, solution_display = :solution_display WHERE id = :id";
+    // $args= array(    
+    //    ":name_title" => $v['name_title'],
+    //    ":name" => $v['name'],
+    //    "contact_ph" => $v['contact_ph'],
+    //    ":department" => $v['department'],
+    //    ":university" => $v['university'],
+    //    ":lab_title" => $v['lab_title'],
+    //    ":solution_display" => $solution_display,
+    //    ":id" => $proposal_id,
+    //  );
+
     $lab_title = $v['lab_title'];
     $proposar_name = $v['name_title'] . ' ' . $v['name'];
     $university = $v['university'];
-    $directory_names = _lm_dir_name($lab_title, $proposar_name, $university);
-    if (LM_RenameDir($proposal_id, $directory_names)) {
+    $directory_names = \Drupal::service("lab_migration_global")->_lm_dir_name($lab_title, $proposar_name, $university);
+    if (\Drupal::service("lab_migration_global")->LM_RenameDir($proposal_id, $directory_names)) {
       $directory_name = $directory_names;
     }
     else {
       return;
     }
+
     $query = \Drupal::database()->update('lab_migration_proposal')->fields([
       'name_title' => $v['name_title'],
       'name' => $v['name'],
@@ -468,38 +484,12 @@ class LabMigrationProposalEditForm extends FormBase {
       'city' => $v['city'],
       'pincode' => $v['pincode'],
       'state' => $v['all_state'],
-      'lab_title' => $v['lab_title'],
+      'operating_system' => $v['operating_system'],
+     'lab_title' => $v['lab_title'],
       'solution_display' => $solution_display,
       'directory_name' => $directory_name,
     ])->condition('id', $proposal_id);
     $result1 = $query->execute();
-    /*Updating the Problem statement file*/
-    if (isset($_FILES['files'])) {
-      foreach ($_FILES['files']['name'] as $file_form_name => $file_name) {
-        if (file_exists($root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name])) {
-          unlink($root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name]);
-          move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name]);
-          \Drupal::messenger()->addmessage(t("File !filename already exists hence overwirtten the exisitng file ", [
-            '!filename' => $_FILES['files']['name'][$file_form_name]
-            ]), 'status');
-        } //file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
-                    /* uploading file */
-        else {
-          if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $directory_name . '/' . $_FILES['files']['name'][$file_form_name])) {
-            /* for uploaded files making an entry in the database */
-            unlink($root_path . $directory_name . '/' . $proposal_data->problem_statement_file);
-            $query = "UPDATE lab_migration_proposal SET problem_statement_file = :filename WHERE id = :proposal_id";
-            $args = [
-              ":filename" => $_FILES['files']['name'][$file_form_name],
-              ":proposal_id" => $proposal_id,
-            ];
-            \Drupal::database()->query($query, $args, ['return' => Database::RETURN_INSERT_ID]);
-
-            \Drupal::messenger()->addmessage($file_name . ' file updated successfully.', 'status');
-          }
-        }
-      } //move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])
-    }
     //$result=\Drupal::database()->query($query, $args);
     /* updating existing experiments */
     $query = \Drupal::database()->select('lab_migration_experiment');
@@ -531,6 +521,28 @@ class LabMigrationProposalEditForm extends FormBase {
         }
       }
     }
+    /* foreach ($form_state['values']['lab_experiment']['update'] as $update_id => $update_value) {
+    if (strlen(trim($update_value)) >= 1) {
+    $description= $form_state['values']['lab_experiment_description']['update']; 
+    $query = "UPDATE {lab_migration_experiment} SET title = :title and description=:description WHERE id = :id";
+    $args = array(
+    ":title"=>  trim($update_value),
+    ":description"=>trim($description),
+    ":id"=> $update_id,
+    );
+    $result2 = \Drupal::database()->query($query, $args);
+    if (!$result2)
+    {
+     \Drupal::messenger()->addmessage(t('Could not update Title of the Experiment : ') . trim($update_value), 'error');
+    }
+    } else {
+    $query = "DELETE FROM {lab_migration_experiment} WHERE id = :id LIMIT 1";
+    $args = array( 
+    ":id" => $update_id
+    );
+    $result3 = \Drupal::database()->query($query, $args);
+    }
+    }*/
     /* inserting new experiments */
     $query = \Drupal::database()->select('lab_migration_experiment');
     $query->fields('lab_migration_experiment');
@@ -547,10 +559,8 @@ class LabMigrationProposalEditForm extends FormBase {
     }
     for ($counter = 1; $counter <= 15; $counter++) {
       $lab_experiment_insert = 'lab_experiment_insert' . $counter;
-      //var_dump($form_state['values'][$lab_experiment_insert]);die;
       $lab_experiment_description_insert = 'lab_experiment_description_insert' . $counter;
-      if ($form_state->getValue([$lab_experiment_insert])) {
-        //var_dump($form_state['values'][$lab_experiment_insert]);die;
+      if (strlen(trim(!$form_state->getValue([$lab_experiment_insert]))) >= 1) {
         $query = "INSERT INTO {lab_migration_experiment} (proposal_id, number, title, description) VALUES (:proposal_id, :number, :title, :description)";
         $args = [
           ":proposal_id" => $proposal_id,
@@ -567,9 +577,50 @@ class LabMigrationProposalEditForm extends FormBase {
         }
       }
     }
-
+    /* $query = \Drupal::database()->select('lab_migration_experiment');
+    $query->fields('lab_migration_experiment');
+    $query->condition('proposal_id', $proposal_id);
+    $query->orderBy('number', 'DESC');
+    $query->range(0, 1);
+    $number_q = $query->execute();
+    if ($number_data = $number_q->fetchObject()) {
+    $number = (int)$number_data->number;
+    $number++;
+    } else {
+    $number = 1;
+    }
+    $insertvalue = array($insert_id => $insert_value);
+    $lab_experimentinsert = $form_state['values']['lab_experiment']['insert'];
+    $lab_exp_descriptioninsert=$form_state['values']['lab_experiment_description']['insert'];
+    if (is_array($lab_experimentinsert) || is_object($lab_experimentinsert))
+    {  
+    foreach ($lab_experimentinsert as $insertvalue) {
+    //foreach ($form_state['values']['lab_experiment']['insert'] as $insert_id => $insert_value) {
+    if (strlen(trim($insert_value)) >= 1) {
+    $query = "INSERT INTO {lab_migration_experiment} (proposal_id, number, title, description) VALUES :proposal_id, :number, :title, :description";
+    $args = array(
+    ":proposal_id" => $proposal_id, 
+    ":number" => $number, 
+    ":title" => trim($insert_value),
+    ":description"=>""
+    );
+    $result4 = \Drupal::database()->query($query, $args);
+    if (!$result4)
+    {
+     \Drupal::messenger()->addmessage(t('Could not insert Title of the Experiment : ') . trim($insert_value), 'error');
+    } else {
+    $number++;
+    }
+    }
+    }
+    }*/
     \Drupal::messenger()->addmessage(t('Proposal Updated'), 'status');
+    $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_all')->toString());
+    // Send the redirect response
+       $response->send();
+       return;
   }
+
 
 }
 ?>

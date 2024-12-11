@@ -10,6 +10,9 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class LabMigrationSolutionProposalApprovalForm extends FormBase {
 
@@ -23,7 +26,10 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
     // $proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -35,7 +41,10 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       }
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+        // drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+
+        $url = Url::fromRoute('lab_migration.solution_proposal_pending');
+        $response = new RedirectResponse($url->toString());
         return;
       }
     }
@@ -230,9 +239,9 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       \Drupal::database()->query($query, $args);
       /* sending email */
       $email_to = $user_data->mail;
-      $from = variable_get('lab_migration_from_email', '');
-      $bcc = $user->mail . ', ' . variable_get('lab_migration_emails', '');
-      $cc = variable_get('lab_migration_cc_emails', '');
+      $from = $config->get('lab_migration_from_email', '');
+      $bcc = $user->mail . ', ' . $config->get('lab_migration_emails', '');
+      $cc = $config->get('lab_migration_cc_emails', '');
       $param['solution_proposal_approved']['proposal_id'] = $proposal_id;
       $param['solution_proposal_approved']['user_id'] = $proposal_data->solution_provider_uid;
       $param['solution_proposal_approved']['headers'] = [
@@ -247,8 +256,8 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       if (!drupal_mail('lab_migration', 'solution_proposal_approved', $email_to, language_default(), $param, $from, TRUE)) {
         \Drupal::messenger()->addmessage('Error sending email message.', 'error');
       }
-      /*$email_to = $user->mail . ', ' . variable_get('lab_migration_emails', '');
-        if (!drupal_mail('lab_migration', 'solution_proposal_approved', $email_to , language_default(), $param, variable_get('lab_migration_from_email', NULL), TRUE))
+      /*$email_to = $user->mail . ', ' . $config->get('lab_migration_emails', '');
+        if (!drupal_mail('lab_migration', 'solution_proposal_approved', $email_to , language_default(), $param, $config->get('lab_migration_from_email', NULL), TRUE))
         \Drupal::messenger()->addmessage('Error sending email message.', 'error');*/
       \Drupal::messenger()->addmessage('Lab migration solution proposal approved. User has been notified of the approval.', 'status');
       drupal_goto('lab-migration/manage-proposal/pending-solution_proposal');
@@ -265,9 +274,9 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
         \Drupal::database()->query($query, $args);
         /* sending email */
         $email_to = $user_data->mail;
-        $from = variable_get('lab_migration_from_email', '');
-        $bcc = $user->mail . ', ' . variable_get('lab_migration_emails', '');
-        $cc = variable_get('lab_migration_cc_emails', '');
+        $from = $config->get('lab_migration_from_email', '');
+        $bcc = $user->mail . ', ' . $config->get('lab_migration_emails', '');
+        $cc = $config->get('lab_migration_cc_emails', '');
         $param['solution_proposal_disapproved']['proposal_id'] = $proposal_id;
         $param['solution_proposal_disapproved']['user_id'] = $proposal_data->solution_provider_uid;
         $param['solution_proposal_disapproved']['message'] = $form_state->getValue(['message']);

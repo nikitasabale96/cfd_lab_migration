@@ -42,4 +42,4 @@ lab_migration.upload_code_form:
   route_name: lab_migration.upload_code_form
   title: 'Code Submission'
   weight: 2
-  base_route: lab_migration.code_approval
+  base_route: lab_migration.list_experiments

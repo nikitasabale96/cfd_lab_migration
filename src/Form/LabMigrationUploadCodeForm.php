@@ -10,8 +10,16 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Database;
+
 
 class LabMigrationUploadCodeForm extends FormBase {
+
+
 
   /**
    * {@inheritdoc}
@@ -21,13 +29,16 @@ class LabMigrationUploadCodeForm extends FormBase {
   }
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
-
+    $config = \Drupal::config('lab_migration.settings'); // Load the configuration
     $user = \Drupal::currentUser();
 
-    $proposal_data = lab_migration_get_proposal();
+    $proposal_data = \Drupal::service("lab_migration_global")->lab_migration_get_proposal();
     if (!$proposal_data) {
-      drupal_goto('');
+      // RedirectResponse('');
+      $response = new RedirectResponse(Url::fromRoute('lab_migration.proposal_form')->toString());
+$response->send();
       return;
+      // var_dump($response);die;
     }
 
     /* add javascript for dependency selection effects */
@@ -39,7 +50,7 @@ class LabMigrationUploadCodeForm extends FormBase {
       /* showing and hiding relevant files */
      $('.form-checkboxes .option').hide();
       $('.form-checkboxes .option').each(function(index) {
-        var activeClass = $('#edit-existing-depfile-dep-lab-title').val();
+        var activeClass = $('#edit-existing-depfile-dep-lab-title').va\Drupal\Core\Link;
         consloe.log(activeClass);
         if ($(this).children().hasClass(activeClass)) {
           $(this).show();
@@ -57,7 +68,7 @@ class LabMigrationUploadCodeForm extends FormBase {
     });
     $('#edit-existing-depfile-dep-lab-title').trigger('change');
   }(jQuery));";
-    drupal_add_js($dep_selection_js, 'inline', 'header');
+    #attached($dep_selection_js, 'inline', 'header');
 
     $form['#attributes'] = ['enctype' => "multipart/form-data"];
 
@@ -83,6 +94,7 @@ class LabMigrationUploadCodeForm extends FormBase {
     while ($experiment_data = $experiment_q->fetchObject()) {
       $experiment_rows[$experiment_data->id] = $experiment_data->number . '. ' . $experiment_data->title;
     }
+    
     $form['experiment'] = [
       '#type' => 'select',
       '#title' => t('Title of the Experiment'),
@@ -91,7 +103,7 @@ class LabMigrationUploadCodeForm extends FormBase {
       '#size' => 1,
       '#required' => TRUE,
     ];
-
+// var_dump($form);die;
     $form['code_number'] = [
       '#type' => 'textfield',
       '#title' => t('Code No'),
@@ -118,16 +130,7 @@ class LabMigrationUploadCodeForm extends FormBase {
       ],
       '#required' => TRUE,
     ];
-    /*$form['dwsim_version'] = array(
-    '#type' => 'select',
-    '#title' => t('DWSIM version used'),
-    '#options' => _lm_list_of_software_version(),
-    '#required' => TRUE,
-  );*/
-    $form['version'] = [
-      '#type' => 'hidden',
-      '#value' => 'Not available',
-    ];
+    
     $form['toolbox_used'] = [
       '#type' => 'hidden',
       '#title' => t('Toolbox used (If any)'),
@@ -145,12 +148,15 @@ class LabMigrationUploadCodeForm extends FormBase {
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
     ];
+    $extensions = $config->get('lab_migration_source_extensions') ?? '';
     $form['sourcefile']['sourcefile1'] = [
       '#type' => 'file',
       '#title' => t('Upload main or source file'),
       '#size' => 48,
-      '#description' => t('Only alphabets and numbers are allowed as a valid filename.') . '<br />' . t('Allowed file extensions: ') . variable_get('lab_migration_source_extensions', ''),
+      '#description' => t('Only alphabets and numbers are allowed as a valid filename.') . '<br />' . t('Allowed file extensions: ') .$extensions
+,
     ];
+
 
     /* $form['dep_files'] = array(
     '#type' => 'item',
@@ -199,42 +205,99 @@ class LabMigrationUploadCodeForm extends FormBase {
   );
   /************ END OF EXISTING DEPENDENCIES **************/
 
-    $form['result'] = [
-      '#type' => 'fieldset',
-      '#title' => t('Result Files'),
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
-    ];
-    $form['result']['result1'] = [
-      '#type' => 'file',
-      '#title' => t('Upload result file. To view the template for result submission please click <a href="https://cfd.fossee.in/sites/default/files/Template_For_Result.doc" target="_blank">here</a>.'),
-      '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions: ') . variable_get('lab_migration_result_pdf_extensions', ''),
-    ];
-    $form['result']['result2'] = [
+    /*$form['result'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Result Files'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['result']['result1'] = array(
       '#type' => 'file',
       '#title' => t('Upload result file'),
       '#size' => 48,
-      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' . t('Allowed file extensions: ') . variable_get('lab_migration_result_extensions', ''),
-    ];
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+      t('Allowed file extensions: ') . $config->get('lab_migration_result_extensions', ''),
+  );
+  $form['result']['result2'] = array(
+      '#type' => 'file',
+      '#title' => t('Upload result file'),
+      '#size' => 48,
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+      t('Allowed file extensions: ') . $config->get('lab_migration_result_extensions', ''),
+  );
+
+  $form['xcos'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('XCOS Files'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['xcos']['xcos1'] = array(
+      '#type' => 'file',
+      '#title' => t('Upload xcos file'),
+      '#size' => 48,
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+      t('Allowed file extensions: ') . $config->get('lab_migration_xcos_extensions', ''),
+  );
+  $form['xcos']['xcos2'] = array(
+      '#type' => 'file',
+      '#title' => t('Upload xcos file'),
+      '#size' => 48,
+      '#description' => t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+      t('Allowed file extensions: ') . $config->get('lab_migration_xcos_extensions', ''),
+  );
+*/
+
+$form['result'] = [
+  '#type' => 'fieldset',
+  '#title' => $this->t('Result Files'),
+  '#collapsible' => FALSE,
+  '#collapsed' => FALSE,
+];
+$extensions = $config->get('lab_migration_result_pdf_extensions') ?? '';
+//var_dump($extensions);die;
+$form['result']['result1'] = [
+  '#type' => 'file',
+  '#title' => $this->t('Upload result file. To view the template for result submission please click <a href="https://cfd.fossee.in/sites/default/files/Template_For_Result.doc" target="_blank">here</a>.'),
+  '#size' => 48,
+  '#description' => $this->t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+                    $this->t('Allowed file extensions: ') . \Drupal::config('lab_migration.settings')->get('lab_migration_result_pdf_extensions'),
+];
+$extensions = $config->get('lab_migration_result_extensions') ?? '';
+$form['result']['result2'] = [
+  '#type' => 'file',
+  '#title' => $this->t('Upload result file'),
+  '#size' => 48,
+  '#description' => $this->t('Separate filenames with underscore. No spaces or any special characters allowed in filename.') . '<br />' .
+                    $this->t('Allowed file extensions: ') . $extensions,
+];
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
 
-    $form['cancel'] = [
-      '#type' => 'markup',
-      '#value' => l(t('Cancel'), 'lab-migration/code'),
-    ];
-    return $form;
-  }
 
-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    if (!lab_migration_check_code_number($form_state->getValue(['code_number']))) {
+$form['cancel_link'] = [
+  '#type' => 'markup',
+  '#markup' => Link::fromTextAndUrl(t('Cancel'), Url::fromRoute('lab_migration.list_experiments'))->toString(),
+];
+    return $form;
+    
+  }
+  private function lab_migration_check_code_number($code_number) {
+    return preg_match('/^[0-9]+$/', $code_number); // Example regex for numeric-only check
+  }
+  private function lab_migration_check_name($caption) {
+    // Allows only alphabets, numbers, and spaces
+    return preg_match('/^[a-zA-Z0-9 ]+$/', $caption);
+  }
+  public function validateForm(array &$form , FormStateInterface $form_state) {
+    if (!$this->lab_migration_check_code_number($form_state->getValue(['code_number']))) {
       $form_state->setErrorByName('code_number', t('Invalid Code Number. Code Number can contain only numbers.'));
     }
 
-    if (!lab_migration_check_name($form_state->getValue(['code_caption']))) {
+    if (!$this->lab_migration_check_name($form_state->getValue(['code_caption']))) {
       $form_state->setErrorByName('code_caption', t('Caption can contain only alphabets, numbers and spaces.'));
     }
 
@@ -242,18 +305,12 @@ class LabMigrationUploadCodeForm extends FormBase {
       $form_state->setErrorByName('os_used', t('Please select the operating system used.'));
     }
 
-    if (!$form_state->getValue(['version'])) {
-      $form_state->setErrorByName('version', t('Please select the dwsim version used.'));
-    }
-
     if (isset($_FILES['files'])) {
       /* check if atleast one source or result file is uploaded */
       if (!($_FILES['files']['name']['sourcefile1'] )) {
         $form_state->setErrorByName('sourcefile1', t('Please upload atleast one main or source file.'));
       }
-      if (!($_FILES['files']['name']['result1'] )) {
-        $form_state->setErrorByName('result1', t('Please upload the result file in the form of pdf.'));
-      }
+
       /* check for valid filename extensions */
       foreach ($_FILES['files']['name'] as $file_form_name => $file_name) {
         if ($file_name) {
@@ -262,29 +319,29 @@ class LabMigrationUploadCodeForm extends FormBase {
             $file_type = 'S';
           }
           else {
-            if (strstr($file_form_name, 'result1')) {
-              $file_type = 'P';
+            if (strstr($file_form_name, 'result')) {
+              $file_type = 'R';
             }
             else {
-              if (strstr($file_form_name, 'result2')) {
-                $file_type = 'R';
+              if (strstr($file_form_name, 'xcos')) {
+                $file_type = 'X';
               }
               else {
                 $file_type = 'U';
               }
             }
           }
-
+          $config = $this->config('lab_migration.settings');
           $allowed_extensions_str = '';
           switch ($file_type) {
             case 'S':
-              $allowed_extensions_str = variable_get('lab_migration_source_extensions', '');
+              $allowed_extensions_str = $config->get('lab_migration_source_extensions') ?? '';
               break;
             case 'R':
-              $allowed_extensions_str = variable_get('lab_migration_result_extensions', '');
+              $allowed_extensions_str = $config->get('lab_migration_result_extensions') ?? '';
               break;
-            case 'P':
-              $allowed_extensions_str = variable_get('lab_migration_result_pdf_extensions', '');
+            case 'X':
+              $allowed_extensions_str = $config->get('lab_migration_xcos_extensions' ) ?? '';
               break;
           }
           $allowed_extensions = explode(',', $allowed_extensions_str);
@@ -296,14 +353,15 @@ class LabMigrationUploadCodeForm extends FormBase {
           if ($_FILES['files']['size'][$file_form_name] <= 0) {
             $form_state->setErrorByName($file_form_name, t('File size cannot be zero.'));
           }
+          $config = $this->config('lab_migration.settings');
 
           /* check if valid file name */
-          if (!lab_migration_check_valid_filename($_FILES['files']['name'][$file_form_name])) {
-            $form_state->setErrorByName($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
-          }
+          // if (!lab_migration_check_valid_filename($_FILES['files']['name'][$file_form_name])) {
+          //   $form_state->setErrorByName($file_form_name, t('Invalid file name specified. Only alphabets and numbers are allowed as a valid filename.'));
+          // }
         }
       }
-    }
+    
 
     /* add javascript dependency selection effects */
     $dep_selection_js = " (function ($) {
@@ -315,7 +373,7 @@ class LabMigrationUploadCodeForm extends FormBase {
     $('.form-checkboxes .option').hide();
       
       $('.form-checkboxes .option').each(function(index) {
-        var activeClass = $('#edit-existing-depfile-dep-lab-title').val();
+        var activeClass = $('#edit-existing-depfile-dep-lab-title').va\Drupal\Core\Link;
         if ($(this).children().hasClass(activeClass)) {
           $(this).show();
         }
@@ -332,20 +390,22 @@ class LabMigrationUploadCodeForm extends FormBase {
     });
     $('#edit-existing-depfile-dep-lab-title').trigger('change');
   })(jQuery);";
-    drupal_add_js($dep_selection_js, 'inline', 'header');
+    #attached($dep_selection_js, 'inline', 'header');
 
-    // drupal_add_js('jQuery(document).ready(function () { alert("Hello!"); });', 'inline');
-    // drupal_static_reset('drupal_add_js') ;
+    // #attached('jQuery(document).ready(function () { alert("Hello!"); });', 'inline');
+    // drupal_static_reset('#attached') ;
   }
+}
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
 
-    $root_path = lab_migration_path();
+    $root_path =  \Drupal::service("lab_migration_global")->lab_migration_path();
 
-    $proposal_data = lab_migration_get_proposal();
+    $proposal_data = \Drupal::service("lab_migration_global")->lab_migration_get_proposal();
     if (!$proposal_data) {
-      drupal_goto('');
+      // RedirectResponse('');
+      return new RedirectResponse(Url::fromRoute('lab_migration.proposal_form')->toString());
       return;
     }
 
@@ -364,7 +424,9 @@ class LabMigrationUploadCodeForm extends FormBase {
     $experiment_data = $experiment_q->fetchObject();
     if (!$experiment_data) {
       \Drupal::messenger()->addmessage("Invalid experiment seleted", 'error');
-      drupal_goto('lab-migration/code');
+      // RedirectResponse('lab-migration/code');
+      $response = new RedirectResponse(Url::fromRoute('lab_migration.list_experiments')->toString());
+$response->send();
     }
 
     /* create proposal folder if not present */
@@ -385,18 +447,19 @@ class LabMigrationUploadCodeForm extends FormBase {
     if ($cur_solution_d = $cur_solution_q->fetchObject()) {
       if ($cur_solution_d->approval_status == 1) {
         \Drupal::messenger()->addmessage(t("Solution already approved. Cannot overwrite it."), 'error');
-        drupal_goto('lab-migration/code');
+        // RedirectResponse('lab-migration/code');
         return;
       }
       else {
         if ($cur_solution_d->approval_status == 0) {
           \Drupal::messenger()->addmessage(t("Solution is under pending review. Delete the solution and reupload it."), 'error');
-          drupal_goto('lab-migration/code');
+          // RedirectResponse('lab-migration/code');
+          return new RedirectResponse(Url::fromUserInput('/lab-migration/code')->toString());
           return;
         }
         else {
           \Drupal::messenger()->addmessage(t("Error uploading solution. Please contact administrator."), 'error');
-          drupal_goto('lab-migration/code');
+          RedirectResponse('lab-migration/code');
           return;
         }
       }
@@ -416,7 +479,7 @@ class LabMigrationUploadCodeForm extends FormBase {
     /* creating file path */
     $file_path = 'EXP' . $experiment_data->number . '/' . 'CODE' . $experiment_data->number . '.' . $form_state->getValue(['code_number']) . '/';
     /* creating solution database entry */
-    $query = "INSERT INTO {lab_migration_solution} (experiment_id, approver_uid, code_number, caption, approval_date, approval_status, timestamp, os_used, version, toolbox_used) VALUES (:experiment_id, :approver_uid, :code_number, :caption, :approval_date, :approval_status, :timestamp, :os_used, :version, :toolbox_used)";
+    $query = "INSERT INTO {lab_migration_solution} (experiment_id, approver_uid, code_number, caption, approval_date, approval_status, timestamp, os_used, toolbox_used) VALUES (:experiment_id, :approver_uid, :code_number, :caption, :approval_date, :approval_status, :timestamp, :os_used, :toolbox_used)";
     $args = [
       ":experiment_id" => $experiment_id,
       ":approver_uid" => 0,
@@ -426,13 +489,12 @@ class LabMigrationUploadCodeForm extends FormBase {
       ":approval_status" => 0,
       ":timestamp" => time(),
       ":os_used" => $form_state->getValue(['os_used']),
-      ":version" => $form_state->getValue(['version']),
       ":toolbox_used" => $form_state->getValue(['toolbox_used']),
     ];
     $solution_id = \Drupal::database()->query($query, $args, [
       'return' => Database::RETURN_INSERT_ID
       ]);
-    //var_dump('solution id= '.$solution_id.  '&&& dep file = '.array_filter($form_state['values']['existing_depfile']['dep_experiment_files']));
+    // var_dump('solution id= '.$solution_id.  '&&& dep file = '.array_filter($form_state['values']['existing_depfile']['dep_experiment_files']));
 
     //die;
   /* linking existing dependencies */
@@ -473,24 +535,22 @@ class LabMigrationUploadCodeForm extends FormBase {
         }
 
         if (file_exists($root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
-          \Drupal::messenger()->addmessage(t("Error uploading file. File !filename already exists.", [
+          \Drupal::database()->addmessage(t("Error uploading file. File !filename already exists.", [
             '!filename' => $_FILES['files']['name'][$file_form_name]
             ]), 'error');
           return;
         }
 
-
         /* uploading file */
         if (move_uploaded_file($_FILES['files']['tmp_name'][$file_form_name], $root_path . $dest_path . $_FILES['files']['name'][$file_form_name])) {
           /* for uploaded files making an entry in the database */
-          //var_dump($_FILES['files']['type'][$file_form_name]);die;
           $query = "INSERT INTO {lab_migration_solution_files} (solution_id, filename, filepath, filemime, filesize, filetype, timestamp)
           VALUES (:solution_id, :filename, :filepath, :filemime, :filesize, :filetype, :timestamp)";
           $args = [
             ":solution_id" => $solution_id,
             ":filename" => $_FILES['files']['name'][$file_form_name],
             ":filepath" => $file_path . $_FILES['files']['name'][$file_form_name],
-            ":filemime" => $_FILES['files']['type'][$file_form_name],
+            ":filemime" => mime_content_type($root_path . $dest_path . $_FILES['files']['name'][$file_form_name]),
             ":filesize" => $_FILES['files']['size'][$file_form_name],
             ":filetype" => $file_type,
             ":timestamp" => time(),
@@ -499,36 +559,42 @@ class LabMigrationUploadCodeForm extends FormBase {
           \Drupal::messenger()->addmessage($file_name . ' uploaded successfully.', 'status');
         }
         else {
-          \Drupal::messenger()->addmessage('Error uploading file : ' . $dest_path . $file_name, 'error');
+          \Drupal::messenger()->addmessage('Error uploading file: ' . $dest_path . $file_name, 'error');
         }
       }
     }
     \Drupal::messenger()->addmessage('Solution uploaded successfully.', 'status');
 
-    /* sending email */
-    $email_to = $user->mail;
+    // /* sending email */
+    // $email_to = $user->mail;
+    // $from = $this->configFactory->get('lab_migration.settings')->get('lab_migration_from_email');
+    // // $from = $config->get('lab_migration_from_email', '');
+    // // $bcc = $config->get('lab_migration_emails', '');
+    // $bcc = $this->configFactory->get('lab_migration.settings')->get('lab_migration_email');
+    // $cc = $this->configFactory->get('lab_migration.settings')->get('lab_migration_cc_email');
 
-    $from = variable_get('lab_migration_from_email', '');
-    $bcc = variable_get('lab_migration_emails', '');
-    $cc = variable_get('lab_migration_cc_emails', '');
-    $param['solution_uploaded']['solution_id'] = $solution_id;
-    $param['solution_uploaded']['user_id'] = $user->uid;
-    $param['solution_uploaded']['headers'] = [
-      'From' => $from,
-      'MIME-Version' => '1.0',
-      'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-      'Content-Transfer-Encoding' => '8Bit',
-      'X-Mailer' => 'Drupal',
-      'Cc' => $cc,
-      'Bcc' => $bcc,
-    ];
+    // // $cc = $config->get('lab_migration_cc_emails', '');
+    // $param['solution_uploaded']['solution_id'] = $solution_id;
+    // $param['solution_uploaded']['user_id'] = $user->uid;
+    // $param['solution_uploaded']['headers'] = [
+    //   'From' => $from,
+    //   'MIME-Version' => '1.0',
+    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+    //   'Content-Transfer-Encoding' => '8Bit',
+    //   'X-Mailer' => 'Drupal',
+    //   'Cc' => $cc,
+    //   'Bcc' => $bcc,
+    // ];
 
-    if (!drupal_mail('lab_migration', 'solution_uploaded', $email_to, language_default(), $param, $from, TRUE)) {
-      \Drupal::messenger()->addmessage('Error sending email message.', 'error');
-    }
-
-    drupal_goto('lab-migration/code');
+    // if (!drupal_Email('lab_migration', 'solution_uploaded', $email_to, language_default(), $param, $from, TRUE)) {
+    //   \Drupal::database()->addmessage('Error sending email message.', 'error');
+    // }
+    $response = new RedirectResponse(Url::fromRoute('lab_migration.upload_code_form')->toString());
+   // Send the redirect response
+      $response->send();
+      }
+    // RedirectResponse('lab-migration/code/upload');
   }
 
-}
+
 ?>
