@@ -157,54 +157,6 @@ $response->send();
 ,
     ];
 
-
-    /* $form['dep_files'] = array(
-    '#type' => 'item',
-    '#title' => t('Dependency Files'),
-  );*/
-
-    /************ START OF EXISTING DEPENDENCIES **************/
-
-    /* existing dependencies */
-    /* $form['existing_depfile'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Use Already Existing Dependency Files'),
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#prefix' => '<div id="existing-depfile-wrapper">',
-    '#suffix' => '</div>',
-    '#tree' => TRUE,
-  );
-
-  /* existing dependencies */
-    /* $form['existing_depfile']['selected'] = array(
-    '#type' => 'item',
-    '#title' => t('Existing Dependency Files Selected'),
-    '#markup' => '<div id="existing_depfile_selected"></div>',
-  );
-
-/*  $form['existing_depfile']['dep_lab_title'] = array(
-      '#type' => 'select',
-      '#title' => t('Title of the Lab'),
-      '#options' => _list_of_lab_titles(),
-  );
-*/
-    /*list($files_options, $files_options_class) = _list_of_dependency_files();
-  $form['existing_depfile']['dep_experiment_files'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Dependency Files'),
-      '#options' => $files_options,
-      '#options_class' => $files_options_class,
-      '#multiple' => TRUE,
-  );
-   
-
-  $form['existing_depfile']['dep_upload'] = array(
-      '#type' => 'item',
-      '#markup' => l('Upload New Depedency Files', 'lab-migration/code/upload_dep'),
-  );
-  /************ END OF EXISTING DEPENDENCIES **************/
-
     /*$form['result'] = array(
     '#type' => 'fieldset',
     '#title' => t('Result Files'),
@@ -301,9 +253,7 @@ $form['cancel_link'] = [
       $form_state->setErrorByName('code_caption', t('Caption can contain only alphabets, numbers and spaces.'));
     }
 
-    if (!$form_state->getValue(['os_used'])) {
-      $form_state->setErrorByName('os_used', t('Please select the operating system used.'));
-    }
+    
 
     if (isset($_FILES['files'])) {
       /* check if atleast one source or result file is uploaded */
@@ -319,12 +269,12 @@ $form['cancel_link'] = [
             $file_type = 'S';
           }
           else {
-            if (strstr($file_form_name, 'result')) {
-              $file_type = 'R';
+            if (strstr($file_form_name, 'result1')) {
+              $file_type = 'P';
             }
             else {
-              if (strstr($file_form_name, 'xcos')) {
-                $file_type = 'X';
+              if (strstr($file_form_name, 'result2')) {
+                $file_type = 'R';
               }
               else {
                 $file_type = 'U';
@@ -337,11 +287,11 @@ $form['cancel_link'] = [
             case 'S':
               $allowed_extensions_str = $config->get('lab_migration_source_extensions') ?? '';
               break;
-            case 'R':
-              $allowed_extensions_str = $config->get('lab_migration_result_extensions') ?? '';
+            case 'P':
+              $allowed_extensions_str = $config->get('lab_migration_result_pdf_extensions') ?? '';
               break;
-            case 'X':
-              $allowed_extensions_str = $config->get('lab_migration_xcos_extensions' ) ?? '';
+            case 'R':
+              $allowed_extensions_str = $config->get('lab_migration_result_extensions' ) ?? '';
               break;
           }
           $allowed_extensions = explode(',', $allowed_extensions_str);

@@ -55,7 +55,7 @@ lab_migration.proposal_approval_form:
   requirements:
     _permission: 'lab migration manage proposal'
 lab_migration.solution_proposal_approval_form:
-  path: /lab-migration/manage-proposal/solution-proposal-approve
+  path: /lab-migration/manage-proposal/solution-proposal-approve/{id}
   defaults:
     _title: 'Approve Solution Proposal'
     _form: \Drupal\lab_migration\Form\LabMigrationSolutionProposalApprovalForm
@@ -202,7 +202,7 @@ lab_migration.completed_labs_all:
   requirements:
     _permission: 'lab migration download code'
 lab_migration.experiments_list:
-  path: /lab-migration/experiments-list
+  path: /lab-migration/experiments-list/{experiment_id}
   defaults:
     _title: 'Download Codes'
     _form: \Drupal\lab_migration\Form\LabMigrationExperimentsList
@@ -216,7 +216,7 @@ lab_migration.labs_progress_all:
   requirements:
     _permission: 'lab migration download code'
 lab_migration.run_form:
-  path: /lab-migration/lab-migration-run/{url_lab_id?}
+  path: /lab-migration/lab-migration-run/{lab_id}/{experiment_id}
   defaults:
     _title: 'Download Codes'
     _form: \Drupal\lab_migration\Form\LabMigrationRunForm

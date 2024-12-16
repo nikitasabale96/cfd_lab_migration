@@ -171,7 +171,7 @@ $form['problem_statement_file'] = [
     '#title' => $this->t('Problem statement file uploaded by the proposer'),
     '#markup' => Link::fromTextAndUrl(
         $this->t('View'),
-        Url::fromUri('internal:/lab-migration/download/problem-statement', ['proposal_id' => $proposal_data->id])
+        Url::fromUri('internal:/lab-migration/download/problem-statement/' . $proposal_data->id)
     )->toString(),
 ];
 
@@ -215,7 +215,7 @@ $form['problem_statement_file'] = [
       // '#markup' =>Link::fromTextAndUrl(t('Cancel'), 'lab-migration/manage-proposal'),
       '#markup' => Link::fromTextAndUrl(
         $this->t('Cancel'),
-        Url::fromUri('internal:/lab_migration/manage-proposal/pending'))->toString(),
+        Url::fromUri('internal:/lab-migration/manage-proposal/pending'))->toString(),
        ];
     return $form;
     // var_dump(t('Cancel'), 'lab-migration/manage-proposal');die;

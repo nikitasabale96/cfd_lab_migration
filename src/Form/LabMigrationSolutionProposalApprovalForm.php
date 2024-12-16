@@ -29,7 +29,7 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
     // $proposal_id = (int) arg(3);
     $route_match = \Drupal::routeMatch();
 
-    $proposal_id = (int) $route_match->getParameter('proposal_id');
+$proposal_id = (int) $route_match->getParameter('proposal_id');
     // $proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -40,27 +40,29 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
         /* everything ok */
       }
       else {
-        \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        // drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
-
-        $url = Url::fromRoute('lab_migration.solution_proposal_pending');
-        $response = new RedirectResponse($url->toString());
+        \Drupal::messenger()->addmessage($this->t('Invalid proposal selected. Please try again.'), 'error');
+        // RedirectResponse('lab-migration/manage-proposal/pending-solution-proposal');
+        $url = Url::fromUri('internal:/lab-migration/manage-proposal/pending-solution-proposal');
+    $response = new RedirectResponse($url->toString());
+    
+    // Send the response back to the client
+    return $response;
         return;
       }
     }
     else {
-      \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+      \Drupal::messenger()->addmessage($this->t('Invalid proposal selected. Please try again.'), 'error');
+      RedirectResponse('lab-migration/manage-proposal/pending-solution-proposal');
       return;
     }
     $form['name'] = [
       '#type' => 'item',
-      '#markup' => l($proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name, 'user/' . $proposal_data->solution_provider_uid),
+      '#markup' => Link::fromTextAndUrl($proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name, 'user/' . $proposal_data->solution_provider_uid),
       '#title' => t('Solution Provider Name'),
     ];
     $form['email_id'] = [
       '#type' => 'item',
-      '#markup' => user_load($proposal_data->solution_provider_uid)->mail,
+      '#markup' => User::load($proposal_data->solution_provider_uid)->mail,
       '#title' => t('Solution Provider Email'),
     ];
     $form['contact_ph'] = [
@@ -100,6 +102,14 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       '#title' => t('Pincode/Postal code'),
     ];
 
+
+    // $form['esim_version'] = [
+    //   '#type' => 'item',
+    //   '#title' => t('eSim version used'),
+    //   '#markup' => $proposal_data->esim_version,
+    // ];
+
+
     $form['lab_title'] = [
       '#type' => 'item',
       '#markup' => $proposal_data->lab_title,
@@ -125,7 +135,7 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
     ];
     $form['solution_display'] = [
       '#type' => 'item',
-      '#title' => t('Display the solution on the www.cfd.fossee.in website'),
+      '#title' => t('Display the solution on the www.esim.fossee.in website'),
       '#markup' => ($proposal_data->solution_display == 1) ? "Yes" : "No",
     ];
     /*if ($proposal_data->solution_provider_uid == 0)
@@ -138,7 +148,7 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       }
     else
       {
-        $solution_provider_user_data = user_load($proposal_data->solution_provider_uid);
+        $solution_provider_user_data = User::load($proposal_data->solution_provider_uid);
         if ($solution_provider_user_data)
           {
             $solution_provider .= '<ul>' . '<li><strong>Solution Provider:</strong> ' . l($solution_provider_user_data->name, 'user/' . $proposal_data->solution_provider_uid) . '</li>' . '<li><strong>Solution Provider Name:</strong> ' . $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name . '</li>' . '<li><strong>Department:</strong> ' . $proposal_data->solution_provider_department . '</li>' . '<li><strong>University:</strong> ' . $proposal_data->solution_provider_university . '</li>' . '</ul>';
@@ -149,7 +159,7 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
           }
       }*/
 
-    $proposer .= '<ul>' . '<li><strong>Proposer:</strong> ' . l($proposal_data->name, 'user/' . $proposal_data->uid) . '</li>' . '<li><strong>Proposer Name:</strong> ' . $proposal_data->name_title . ' ' . $proposal_data->name . '</li>' . '<li><strong>Contact No:</strong> ' . $proposal_data->contact_ph . '</li>' . '<li><strong>Email:</strong> ' . user_load($proposal_data->uid)->mail . '</li>' . '<li><strong>Department:</strong> ' . $proposal_data->department . '</li>' . '<li><strong>University:</strong> ' . $proposal_data->university . '</li>' . '<li><strong>Country:</strong> ' . $proposal_data->country . '</li>' . '<li><strong>State:</strong> ' . $proposal_data->state . '</li>' . '<li><strong>City:</strong> ' . $proposal_data->city . '</li>' . '<li><strong>Pincode:</strong> ' . $proposal_data->pincode . '</li>' . '</ul>';
+    $proposer .= '<ul>' . '<li><strong>Proposer:</strong> ' . Link::fromTextAndUrl($proposal_data->name, 'user/' . $proposal_data->uid) . '</li>' . '<li><strong>Proposer Name:</strong> ' . $proposal_data->name_title . ' ' . $proposal_data->name . '</li>' . '<li><strong>Contact No:</strong> ' . $proposal_data->contact_ph . '</li>' . '<li><strong>Email:</strong> ' . User::load($proposal_data->uid)->mail . '</li>' . '<li><strong>Department:</strong> ' . $proposal_data->department . '</li>' . '<li><strong>University:</strong> ' . $proposal_data->university . '</li>' . '<li><strong>Country:</strong> ' . $proposal_data->country . '</li>' . '<li><strong>State:</strong> ' . $proposal_data->state . '</li>' . '<li><strong>City:</strong> ' . $proposal_data->city . '</li>' . '<li><strong>Pincode:</strong> ' . $proposal_data->pincode . '</li>' . '</ul>';
     $form['proposer_details'] = [
       '#type' => 'item',
       '#title' => t('Proposer of Lab :'),
@@ -179,13 +189,17 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
     ];
     $form['cancel'] = [
       '#type' => 'markup',
-      '#value' => l(t('Cancel'), 'lab-migration/manage-proposal/pending-solution-proposal'),
+      '#value' => Link::fromTextAndUrl(t('Cancel'), 'lab-migration/manage-proposal/pending-solution-proposal'),
     ];
     return $form;
   }
 
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('proposal_id');
+
     // $solution_provider_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -211,7 +225,11 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+$proposal_id = (int) $route_match->getParameter('proposal_id');
+
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -223,16 +241,16 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
       }
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-        drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+        RedirectResponse('lab-migration/manage-proposal/pending-solution-proposal');
         return;
       }
     }
     else {
       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+      RedirectResponse('lab-migration/manage-proposal/pending-solution-proposal');
       return;
     }
-    $user_data = user_load($proposal_data->solution_provider_uid);
+    $user_data = User::load($proposal_data->solution_provider_uid);
     if ($form_state->getValue(['approval']) == 1) {
       $query = "UPDATE {lab_migration_proposal} SET solution_status = 2 WHERE id =:proposal_id";
       $args = [":proposal_id" => $proposal_id];
@@ -260,7 +278,7 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
         if (!drupal_mail('lab_migration', 'solution_proposal_approved', $email_to , language_default(), $param, $config->get('lab_migration_from_email', NULL), TRUE))
         \Drupal::messenger()->addmessage('Error sending email message.', 'error');*/
       \Drupal::messenger()->addmessage('Lab migration solution proposal approved. User has been notified of the approval.', 'status');
-      drupal_goto('lab-migration/manage-proposal/pending-solution_proposal');
+      RedirectResponse('lab-migration/manage-proposal/pending-solution_proposal');
       return;
     }
     else {
@@ -273,27 +291,27 @@ class LabMigrationSolutionProposalApprovalForm extends FormBase {
         ];
         \Drupal::database()->query($query, $args);
         /* sending email */
-        $email_to = $user_data->mail;
-        $from = $config->get('lab_migration_from_email', '');
-        $bcc = $user->mail . ', ' . $config->get('lab_migration_emails', '');
-        $cc = $config->get('lab_migration_cc_emails', '');
-        $param['solution_proposal_disapproved']['proposal_id'] = $proposal_id;
-        $param['solution_proposal_disapproved']['user_id'] = $proposal_data->solution_provider_uid;
-        $param['solution_proposal_disapproved']['message'] = $form_state->getValue(['message']);
-        $param['solution_proposal_disapproved']['headers'] = [
-          'From' => $from,
-          'MIME-Version' => '1.0',
-          'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-          'Content-Transfer-Encoding' => '8Bit',
-          'X-Mailer' => 'Drupal',
-          'Cc' => $cc,
-          'Bcc' => $bcc,
-        ];
-        if (!drupal_mail('lab_migration', 'solution_proposal_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
-          \Drupal::messenger()->addmessage('Error sending email message.', 'error');
-        }
+        // $email_to = $user_data->mail;
+        // $from = $config->get('lab_migration_from_email', '');
+        // $bcc = $user->mail . ', ' . $config->get('lab_migration_emails', '');
+        // $cc = $config->get('lab_migration_cc_emails', '');
+        // $param['solution_proposal_disapproved']['proposal_id'] = $proposal_id;
+        // $param['solution_proposal_disapproved']['user_id'] = $proposal_data->solution_provider_uid;
+        // $param['solution_proposal_disapproved']['message'] = $form_state->getValue(['message']);
+        // $param['solution_proposal_disapproved']['headers'] = [
+        //   'From' => $from,
+        //   'MIME-Version' => '1.0',
+        //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+        //   'Content-Transfer-Encoding' => '8Bit',
+        //   'X-Mailer' => 'Drupal',
+        //   'Cc' => $cc,
+        //   'Bcc' => $bcc,
+        // ];
+        // if (!drupal_mail('lab_migration', 'solution_proposal_disapproved', $email_to, language_default(), $param, $from, TRUE)) {
+        //   \Drupal::messenger()->addmessage('Error sending email message.', 'error');
+        // }
         \Drupal::messenger()->addmessage('Lab migration solution proposal dis-approved. User has been notified of the dis-approval.', 'status');
-        drupal_goto('lab-migration/manage-proposal/pending-solution-proposal');
+        RedirectResponse('lab-migration/manage-proposal/pending-solution-proposal');
         return;
       }
     }

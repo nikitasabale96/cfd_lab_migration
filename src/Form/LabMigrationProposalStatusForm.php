@@ -38,6 +38,7 @@ $proposal_id = (int) $route_match->getParameter('id');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
+    // var_dump($proposal_id);die;
     if ($proposal_q) {
       if ($proposal_data = $proposal_q->fetchObject()) {
         /* everything ok */
@@ -64,9 +65,10 @@ $proposal_id = (int) $route_match->getParameter('id');
 
       '#title' => t('Name'),
     ];
+    // var_dump($proposal_data);die;
     $form['email_id'] = [
       '#type' => 'item',
-      '#markup' => User::load($proposal_data->uid)->mail,
+      '#markup' => User::load($proposal_data->uid)->getEmail(),
       '#title' => t('Email'),
     ];
     $form['contact_ph'] = [
@@ -116,7 +118,7 @@ $proposal_id = (int) $route_match->getParameter('id');
       else {
         $solution_provider_user_data = user_load($proposal_data->solution_provider_uid);
         if ($solution_provider_user_data) {
-          $solution_provider = "Solution will be provided by user " . l($solution_provider_user_data->name, 'user/' . $proposal_data->solution_provider_uid);
+          //$solution_provider = "Solution will be provided by user " . l($solution_provider_user_data->name, 'user/' . $proposal_data->solution_provider_uid);
         }
         else {
           $solution_provider = "User does not exists";
@@ -160,11 +162,11 @@ $proposal_id = (int) $route_match->getParameter('id');
     if ($proposal_data->approval_status == 0) {
       $form['approve'] = [
         '#type' => 'item',
-        '#markup' => l('Click here', 'lab-migration/manage-proposal/approve/' . $proposal_id),
+        //'#markup' => l('Click here', 'lab-migration/manage-proposal/approve/' . $proposal_id),
         '#title' => t('Approve'),
       ];
     }
-    var_dump($proposal_data);die;
+   // var_dump($proposal_data);die;
     if ($proposal_data->approval_status == 1) {
       $form['completed'] = [
         '#type' => 'checkbox',
@@ -186,7 +188,7 @@ $proposal_id = (int) $route_match->getParameter('id');
     ];
     $form['cancel'] = [
       '#type' => 'markup',
-      '#markup' => Link::fromTextAndUrl(t('Cancel'), Url::fromRoute('lab_migration.proposal_all'))->toString(),
+      '#markup' => Link::fromTextAndUrl(t('Cancel'), Url::fromUri('internal:/lab-migration/manage-proposal/all'))->toString(),
     ];
     return $form;
   }
@@ -198,13 +200,14 @@ $proposal_id = (int) $route_match->getParameter('id');
     $route_match = \Drupal::routeMatch();
 
     $proposal_id = (int) $route_match->getParameter('id');
+    
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     // var_dump($proposal_q);die;
-
+// var_dump($proposal_id);die;
     if ($proposal_q) {
       if ($proposal_data = $proposal_q->fetchObject()) {
         /* everything ok */
@@ -212,7 +215,7 @@ $proposal_id = (int) $route_match->getParameter('id');
       else {
         \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
         // drupal_goto('lab-migration/manage-proposal');
-        $response = new RedirectResponse('/lab-migration/manage-proposal/pening-solution');
+        $response = new RedirectResponse('lab_migration.proposal_pending_solution');
          $response->send(); 
         return;
       }
@@ -220,10 +223,11 @@ $proposal_id = (int) $route_match->getParameter('id');
     else {
       \Drupal::messenger()->addmessage(t('Invalid proposal selected. Please try again.'), 'error');
       // drupal_goto('lab-migration/manage-proposal');
-      $response = new RedirectResponse('/lab-migration/manage-proposal/pening-solution');
+      $response = new RedirectResponse('lab_migration.proposal_pending_solution');
       $response->send(); 
       return;
     }
+  
     /* set the book status to completed */
     if ($form_state->getValue(['completed']) == 1) {
       $up_query = "UPDATE lab_migration_proposal SET approval_status = :approval_status , expected_completion_date = :expected_completion_date WHERE id = :proposal_id";
@@ -234,6 +238,7 @@ $proposal_id = (int) $route_match->getParameter('id');
       ];
       $result = \Drupal::database()->query($up_query, $args);
       \Drupal::service("lab_migration_global")->CreateReadmeFileLabMigration($proposal_id);
+      // var_dump($proposal_id);die;
       if (!$result) {
         \Drupal::messenger()->addmessage('Error in update status', 'error');
         return;

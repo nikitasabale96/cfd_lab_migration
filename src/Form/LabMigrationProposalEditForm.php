@@ -204,11 +204,6 @@ return new RedirectResponse('/lab-migration/manage-proposal/pending');
         'placeholder' => 'Insert pincode of your city/ village....'
         ],
     ];
-    $form['operating_system'] = [
-      '#type' => 'textfield',
-      '#default_value' => $proposal_data->operating_system,
-      '#title' => t('Operating System'),
-    ];
    
    
     $form['lab_title'] = [
@@ -484,8 +479,7 @@ $proposal_id = (int) $route_match->getParameter('id');
       'city' => $v['city'],
       'pincode' => $v['pincode'],
       'state' => $v['all_state'],
-      'operating_system' => $v['operating_system'],
-     'lab_title' => $v['lab_title'],
+      'lab_title' => $v['lab_title'],
       'solution_display' => $solution_display,
       'directory_name' => $directory_name,
     ])->condition('id', $proposal_id);

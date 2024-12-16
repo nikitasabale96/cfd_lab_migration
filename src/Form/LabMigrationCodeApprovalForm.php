@@ -148,7 +148,7 @@ class LabMigrationCodeApprovalForm extends FormBase {
             $pdfname=substr($solution_files_data->pdfpath, strrpos($solution_files_data->pdfpath, '/') + 1);
             $solution_files_html .=l($pdfname, 'lab-migration/download/pdf/' . $solution_files_data->id). ' (PDF File)' . '<br/>';
             }*/
-      }$url = Url::fromUri('internal:/lab_migration/download/solution/' . $solution_files_data->id);
+      }$url = Url::fromUri('internal:/lab-migration/download/solution/' . $solution_files_data->id);
 
       // Create the link with Link::fromTextAndUrl.
       $link = Link::fromTextAndUrl($solution_files_data->filename, $url)->toString();
@@ -158,11 +158,11 @@ class LabMigrationCodeApprovalForm extends FormBase {
     }
     /* get dependencies files */
     //$dependency_q = \Drupal::database()->query("SELECT * FROM {lab_migration_solution_dependency} WHERE solution_id = %d ORDER BY id ASC", $solution_id);
-    $query = \Drupal::database()->select('lab_migration_solution_dependency');
-    $query->fields('lab_migration_solution_dependency');
-    $query->condition('solution_id', $solution_id);
-    $query->orderBy('id', 'ASC');
-    $dependency_q = $query->execute();
+    // $query = \Drupal::database()->select('lab_migration_solution_dependency');
+    // $query->fields('lab_migration_solution_dependency');
+    // $query->condition('solution_id', $solution_id);
+    // $query->orderBy('id', 'ASC');
+    // $dependency_q = $query->execute();
     // while ($dependency_data = $dependency_q->fetchObject()) {
       //$dependency_files_q = \Drupal::database()->query("SELECT * FROM {lab_migration_dependency_files} WHERE id = %d", $dependency_data->dependency_id);
     //   $query = \Drupal::database()->select('lab_migration_dependency_files');
@@ -192,12 +192,12 @@ class LabMigrationCodeApprovalForm extends FormBase {
       '#type' => 'textarea',
       '#title' => t('Reason for dis-approval'),
       '#states' => [
-        'visible' => [
-          ':input[name="approved"]' => [
-            'value' => '2'
-            ]
-          ],
-        'required' => [':input[name="approved"]' => ['value' => '2']],
+        // 'visible' => [
+        //   ':input[name="approved"]' => [
+        //     'value' => '2'
+        //     ]
+        //   ],
+        // 'required' => [':input[name="approved"]' => ['value' => '2']],
       ],
     ];
     $form['submit'] = [
@@ -207,11 +207,12 @@ class LabMigrationCodeApprovalForm extends FormBase {
     $form['cancel'] = [
       '#type' => 'markup',
       //'#markup' => l(t('Cancel'), 'lab_migration/code_approval'),
+      '#markup' => Link::fromTextAndUrl( $this->t('Cancel'),Url::fromRoute('lab_migration.code_approval'))->toString(), 
     ];
     return $form;
   }
 
-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state) {
     if ($form_state->getValue(['approved']) == 2) {
       if (strlen(trim($form_state->getValue(['message']))) <= 30) {
         $form_state->setErrorByName('message', t('Please mention the reason for disapproval.'));
@@ -254,6 +255,8 @@ class LabMigrationCodeApprovalForm extends FormBase {
     $proposal_q = $query->execute();
     $proposal_data = $proposal_q->fetchObject();
     $user_data = User::load($proposal_data->uid);
+
+    $approver_uid = $user->id(); 
     $solution_prove_user_data = User::load($proposal_data->solution_provider_uid);
     // **** TODO **** : del_lab_pdf($proposal_data->id);
     if ($form_state->getValue(['approved']) == "0") {
