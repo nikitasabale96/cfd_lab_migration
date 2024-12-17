@@ -78,7 +78,7 @@ class LabMigrationBulkApprovalForm extends FormBase {
       '#type' => 'markup',
       '#markup' => Link::fromTextAndUrl(
         $this->t('Download'),
-        Url::fromUri('internal:/lab_migration/full-download/lab/' . $lab_default_value)
+        Url::fromUri('internal:/lab-migration/full-download/lab/' . $lab_default_value)
       )->toString() . ' ' . $this->t('(Download all the approved and unapproved solutions of the entire lab)'),
       // '#states' => [
       //     'invisible' => [
@@ -126,7 +126,7 @@ class LabMigrationBulkApprovalForm extends FormBase {
   ];
   $form['download_experiment_wrapper']['download_experiment'] = [
     '#type' => 'item',
-    '#markup' => Link::fromTextAndUrl('Download Experiment', Url::fromUri('internal:/lab_migration/download/experiment/' . $form_state->getValue('lab_experiment_list')))->toString()
+    '#markup' => Link::fromTextAndUrl('Download Experiment', Url::fromUri('internal:/lab-migration/download/experiment/' . $form_state->getValue('lab_experiment_list')))->toString()
 ];
    $form['download_experiment_wrapper']['lab_experiment_actions'] = [
       '#type' => 'select',
@@ -138,8 +138,7 @@ class LabMigrationBulkApprovalForm extends FormBase {
       '#states' => [
         'invisible' => [
           [
-            [':input[name="lab"]' => ['value' => 0]],
-            
+            [':input[name="lab"]' => ['value' => 0]]
           ],
         ],
       ],
@@ -161,7 +160,7 @@ $form['download_solution_wrapper'] = [
 ];
 $form['download_solution_wrapper']['download_solution'] = [
   '#type' => 'item',
-  '#markup' => Link::fromTextAndUrl('Download Solution', Url::fromUri('internal:/lab_migration/download/solution/' . $form_state->getValue('solution_list')))->toString()
+  '#markup' => Link::fromTextAndUrl('Download Solution', Url::fromUri('internal:/lab-migration/download/solution/' . $form_state->getValue('solution_list')))->toString()
 ];
 $form['download_solution_wrapper']['lab_experiment_solution_actions'] = [
   '#type' => 'select',
@@ -271,12 +270,12 @@ $query = \Drupal::database()->select('lab_migration_solution_files', 's');
         // Create file download link
         $items = [
          
-           Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab_migration/download/file/' . $solution_list_data->id))->toString(),
+           Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
           "{$solution_file_type}"
         ];
       }
     }
-    // array_push($solution_files_rows, $items);
+    array_push($solution_files_rows, $items);
     //var_dump($solution_rows);die;
       $form['download_solution_wrapper']['solution_files'] = [
         '#type' => 'fieldset',
@@ -471,7 +470,7 @@ $response->send();
           
       }
       
-    $form['lab_details']['#markup'] = '<span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' . '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->university . '</li>'  . '</li>' .  '</li>' . '</ul>' . $solution_provider;
+    $form['lab_details']['#markup'] = '<span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span></td><td style="width: 35%;"><br />' . '<ul>' . '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' . '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->university . '</li>' . '<li><strong>Version:</strong> ' . $lab_details->version . '</li>' . '<li><strong>Operating System:</strong> ' . $lab_details->operating_system . '</li>' . '</ul>' . $solution_provider;
 
     $details = $form['lab_details']['#markup'];
     return $details;
@@ -537,7 +536,7 @@ public function _bulk_list_experiment_actions()
               $experiment_list .= '</p>';
             }
             $msg = \Drupal::messenger()->addmessage(t('Approved Entire Lab. Click on the checkbox below to mark this lab completed'), 'status');
-            // fromUri('internal:/lab_migration/manage-proposal/status/' . $form_state->getValue(['lab']))
+            // fromUri('internal:/lab-migration/manage-proposal/status/' . $form_state->getValue(['lab']))
             /* email */
 //             $email_subject = t('[!site_name] Your uploaded Lab Migration solutions have been approved', [
 //               '!site_name' => $config->get('site_name', '')
@@ -603,7 +602,7 @@ public function _bulk_list_experiment_actions()
           elseif (($form_state->getValue(['lab_actions']) == 3) && ($form_state->getValue(['lab_experiment_actions']) == 0) && ($form_state->getValue(['lab_experiment_solution_actions']) == 0)) {
 
             if (strlen(trim($form_state->getValue(['message']))) <= 30) {
-              $form_state->setErrorByName('message', t(''));
+              //$form_state->setErrorByName('message', t(''));
               \Drupal::messenger()->addmessage("Please mention the reason for disapproval. Minimum 30 character required", 'error');
               return;
             }
@@ -611,7 +610,7 @@ public function _bulk_list_experiment_actions()
               \Drupal::messenger()->addmessage(t('You do not have permission to Bulk Dis-Approved and Deleted Entire Lab.'), 'error');
               return;
             }
-            if (\Drupal::service("lab_migration_global")->lab_migration_delete_lab($form_state->getValue(['lab']))) {
+            if (lab_migration_delete_lab($form_state->getValue(['lab']))) {
               \Drupal::messenger()->addmessage(t('Dis-Approved and Deleted Entire Lab.'), 'status');
             }
             else {
@@ -648,7 +647,7 @@ public function _bulk_list_experiment_actions()
           }
           elseif (($form_state->getValue(['lab_actions']) == 4) && ($form_state->getValue(['lab_experiment_actions']) == 0) && ($form_state->getValue(['lab_experiment_solution_actions']) == 0)) {
             if (strlen(trim($form_state->getValue(['message']))) <= 30) {
-              $form_state->setErrorByName('message', t(''));
+              //$form_state->setErrorByName('message', t(''));
               \Drupal::messenger()->addmessage("Please mention the reason for disapproval/deletion. Minimum 30 character required", 'error');
               return;
             }
@@ -835,7 +834,7 @@ public function _bulk_list_experiment_actions()
           }
           elseif (($form_state->getValue(['lab_actions']) == 0) && ($form_state->getValue(['lab_experiment_actions']) == 3) && ($form_state->getValue(['lab_experiment_solution_actions']) == 0)) {
             if (strlen(trim($form_state->getValue(['message']))) <= 30) {
-              $form_state->setErrorByName('message', t(''));
+              //$form_state->setErrorByName('message', t(''));
               \Drupal::messenger()->addmessage("Please mention the reason for disapproval. Minimum 30 character required", 'error');
               return;
             }
@@ -996,7 +995,7 @@ public function _bulk_list_experiment_actions()
             $experiment_q = $query->execute();
             $experiment_value = $experiment_q->fetchObject();
             if (strlen(trim($form_state->getValue(['message']))) <= 30) {
-              $form_state->setErrorByName('message', t(''));
+              //$form_state->setErrorByName('message', t(''));
               \Drupal::messenger()->addmessage("Please mention the reason for disapproval. Minimum 30 character required", 'error');
               return;
             }
@@ -1066,9 +1065,9 @@ public function _bulk_list_experiment_actions()
         //     }
         //   }
         }
-        else {
-          \Drupal::messenger()->addmessage(t('You do not have permission to bulk manage code.'), 'error');
-        }
+        // else {
+        //   \Drupal::messenger()->addmessage(t('You do not have permission to bulk manage code.'), 'error');
+        // }
       }
     //}
     return $msg;

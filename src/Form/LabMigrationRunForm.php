@@ -157,49 +157,20 @@ $query = \Drupal::database()->select('lab_migration_solution_files', 's');
               break;
           }
         
-          // Create file download link
-//           $items = [
-           
-//              Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
-//             "{$experiments_file_type}"
-//           ];
-//         }
-//       }
-//       array_push($solution_files_rows, $items);
-//       //var_dump($solution_rows);die;
-//         $form['download_solution_wrapper']['experiments_files'] = [
-//           '#type' => 'fieldset',
-//           '#title' => t('Title of the files'),
-//         ];
-//         $solution_files_header = ['Filename', 'Type']; // Table headers
-
-//         $table = [
-//           '#type' => 'table',
-//           '#header' => $solution_files_header,
-//           '#rows' => $solution_files_rows,
-        
-//         '#attributes' => [
-//           'style' => 'width: 100%;',
           
-//         ],
-//       ];
-//             // Add the table to the fieldset
-// $form['download_solution_wrapper']['solution_files']['table'] = $table;
-        
-      
-// ===========
+// Create file download link
 $items = [
-           
+         
   Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
- "{$experiments_file_type}"
+ "{$solution_file_type}"
 ];
 }
 }
 array_push($solution_files_rows, $items);
 //var_dump($solution_rows);die;
-$form['download_solution_wrapper']['experiments_files'] = [
+$form['download_solution_wrapper']['solution_files'] = [
 '#type' => 'fieldset',
-'#title' => t('Title of the files'),
+'#title' => t('List of solution files'),
 ];
 $solution_files_header = ['Filename', 'Type']; // Table headers
 
@@ -216,26 +187,14 @@ $table = [
  // Add the table to the fieldset
 $form['download_solution_wrapper']['solution_files']['table'] = $table;
 
-
-
- $form['lab_details'] = array(
+$form['lab_details'] = array(
             '#type' => 'item',
             '#markup' => '<div id="ajax_lab_details">' . $this->_lab_details($lab_default_value) . '</div>'
         );
         $form['back_to_completed_labs'] = array(
-            '#type' => 'item',
-            // '#markup' => l('Back to Completed Labs', 'lab-migration/completed-labs')
+          '#type' => 'item',
+          '#markup' => Link::fromTextAndUrl('Back to Completed Labs', Url::fromRoute('lab_migration.completed_labs_all'))->toString(),
         );
-
-
-
-
-
-
-
-
-
-
 
     return $form;
   }
@@ -353,22 +312,25 @@ public function _list_of_labs($selected)
     }
   
     // Lab details markup.
-    $lab_details_markup = '<span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span>' .
-      '<ul>' .
-      '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' .
-      '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' .
-      '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' .
-      '<li><strong>University:</strong> ' . $lab_details->university . '</li>' .
-      '<li><strong>Category:</strong> ' . $lab_details->category . '</li>' .
-      '</ul>';
+  //   $lab_details_markup = '<table><td><tr><span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span></tr></td></table>' .
+  //     '<ul>' .
+  //     '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' .
+  //     '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' .
+  //     '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' .
+  //     '<li><strong>University:</strong> ' . $lab_details->university . '</li>' .
+  //     '<li><strong>Category:</strong> ' . $lab_details->category . '</li>' .
+  //     '</ul></td><td>';
   
-    // Combine lab details and solution provider into a table.
-    $markup = '<table><tr>' .
-      '<td>' . $lab_details_markup . '</td>' .
-      '<td>' . $solution_provider . '</td>' .
-      '</tr></table>';
-  
-    return $markup;
+  //   // Combine lab details and solution provider into a table.
+  //   $markup = '<table><tr>' .
+  //     '<td>' . $lab_details_markup . '</td>' .
+  //     '<td>' . $solution_provider . '</td>' .
+  //     '</tr></table>';
+  // // =========
+  //  return $markup;
+  $form['lab_details']['#markup'] = '<table><tr><td><span style="color: rgb(128, 0, 0);"><strong>About the Lab</strong></span>' . '<ul>' . '<li><strong>Proposer Name:</strong> ' . $lab_details->name_title . ' ' . $lab_details->name . '</li>' . '<li><strong>Title of the Lab:</strong> ' . $lab_details->lab_title . '</li>' . '<li><strong>Department:</strong> ' . $lab_details->department . '</li>' . '<li><strong>University:</strong> ' . $lab_details->university . '</li>' . '<li><strong>Category:</strong> ' . $lab_details->category . '</li>' . '</ul></td><td>' . $solution_provider . '</td></tr></table>';
+  $details = $form['lab_details']['#markup'];
+  return $details;
   }
   public function bootstrap_table_format(array $headers, array $rows) {
     // Define the table header and rows.
@@ -389,7 +351,7 @@ public function _list_of_labs($selected)
   
     // Create a table render array with Drupal's table theming.
     $table = [
-      '#theme' => 'table',
+      '#type' => 'table',
       '#header' => $table_header,
       '#rows' => $table_rows,
       '#attributes' => ['class' => ['table', 'table-bordered', 'table-hover']],
