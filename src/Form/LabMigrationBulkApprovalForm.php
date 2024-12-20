@@ -42,8 +42,8 @@ class LabMigrationBulkApprovalForm extends FormBase {
     $selected = $form_state->getValue('lab') ?: key($options_first);
     $selected = $form_state->getValue('lab', !empty($options_first) ? key($options_first) : '');
     $select_two = $form_state->getValue('lab_experiment_list', !empty($options_two) ? key($options_two) : '');
-    $route_match = \Drupal::routeMatch();
-    //$url_lab_id = (int) $route_match->getParameter('url_lab_id');
+    // $route_match = \Drupal::routeMatch();
+    // $url_lab_id = (int) $route_match->getParameter('url_lab_id');
     // if (!$url_lab_id)
     //   {
     //     // $selected = isset($form_state['values']['lab']) ? $form_state['values']['lab'] : key($options_first);
@@ -269,8 +269,7 @@ $query = \Drupal::database()->select('lab_migration_solution_files', 's');
       
         // Create file download link
         $items = [
-         
-           Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
+                 Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
           "{$solution_file_type}"
         ];
       }
