@@ -269,7 +269,7 @@ $query = \Drupal::database()->select('lab_migration_solution_files', 's');
       
         // Create file download link
         $items = [
-                 Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/download/file/' . $solution_list_data->id))->toString(),
+                 Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/full-download/lab/' . $solution_list_data->id))->toString(),
           "{$solution_file_type}"
         ];
       }

@@ -950,7 +950,7 @@ public function lab_migration_download_problem_statement() {
     }
     else {
       \Drupal::messenger()->addmessage("There are no files in this solutions to download", 'error');
-      drupal_goto('lab-migration/lab-migration-run');
+      // drupal_goto('lab-migration/lab-migration-run');
     }
   }
 
