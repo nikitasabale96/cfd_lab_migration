@@ -603,8 +603,6 @@ $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     // if (!drupal_mail('lab_migration', 'proposal_received', $email_to, user_preferred_language($user), $param, $from, TRUE)) {
     //   \Drupal::messenger()->addmessage('Error sending email message.', 'error');
     // }
-    // \Drupal::messenger()->addmessage(t('We have received you Lab migration proposal. We will get back to you soon.'), 'status');
-    // drupal_goto('');
     \Drupal::messenger()->addmessage($this->t('We have received you Lab migration proposal. We will get back to you soon.'));
     // $response = new RedirectResponse(Url::fromRoute('<front>')->toString());
     // $response->send();

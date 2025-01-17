@@ -1270,7 +1270,7 @@ $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();
     $lab_q = $query->execute();
     $lab_data = $lab_q->fetchObject();
     $LAB_PATH = $lab_data->directory_name . '/';
-    // var_dump($LAB_PATH);die;
+    // var_dump($root_path .$LAB_PATH);die;
     /* zip filename */
     $zip_filename = $root_path . 'zip-' . time() . '-' . rand(0, 999999) . '.zip';
     //var_dump($zip_filename);die;
@@ -1307,6 +1307,8 @@ $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();
         $query->condition('solution_id', $solution_row->id);
         $solution_dependency_files_q = $query->execute();
         while ($solution_files_row = $solution_files_q->fetchObject()) {
+          var_dump($root_path . $LAB_PATH . $solution_files_row->filepath, $LAB_PATH . $EXP_PATH . $CODE_PATH . str_replace(' ', '_', ($solution_files_row->filename)));die;
+
           // $zip->addFile($root_path . $solution_files_row->directory_name . '/' . $solution_files_row->filepath, $APPROVE_PATH . $EXP_PATH . $CODE_PATH . $solution_files_row->filename);
           $zip->addFile($root_path . $LAB_PATH . $solution_files_row->filepath, $LAB_PATH . $EXP_PATH . $CODE_PATH . str_replace(' ', '_', ($solution_files_row->filename)));
         }
