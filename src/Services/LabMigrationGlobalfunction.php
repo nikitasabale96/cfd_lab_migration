@@ -85,7 +85,7 @@ public function _lm_list_of_cities() {
     $proposer_name = ucwords($name); // Correcting "proposar" typo.
     $university_name = ucwords($university);
   
-    $dir_name = $lab_title . " " . "by". " " . $proposar_name . ' ' . $university_name;
+    $dir_name = $lab_title . " " . "by". " " . $proposer_name . ' ' . $university_name;
     $directory_name = str_replace("__", "_", str_replace(" ", "_", $dir_name));
   return $directory_name;
   }
