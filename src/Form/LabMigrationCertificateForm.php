@@ -104,7 +104,7 @@ class LabMigrationCertificateForm extends FormBase {
       ":creation_date" => time(),
     ];
     $proposal_id = \Drupal::database()->query($result, $args);
-    drupal_goto('lab-migration/certificate');
+    // drupal_goto('lab-migration/certificate');
   }
 
 }

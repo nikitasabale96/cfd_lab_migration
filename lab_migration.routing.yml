@@ -264,7 +264,7 @@ lab_migration.certificate_form:
   requirements:
     _permission: 'Create custom Certificate'
 lab_migration.certificate_edit_form:
-  path: /lab-migration/certificate/lm-proposer/form/edit
+  path: /lab-migration/certificate/lm-proposer/form/edit/{id}
   defaults:
     _title: 'Edit Proposer Certificate'
     _form: \Drupal\lab_migration\Form\LabMigrationCertificateEditForm
@@ -278,14 +278,14 @@ lab_migration.certificate_participation_form:
   requirements:
     _permission: 'Create custom Certificate'
 lab_migration.certificate_participation_edit_form:
-  path: /lab-migration/certificate/lm-participation/form/edit
+  path: /lab-migration/certificate/lm-participation/form/edit/{id}
   defaults:
     _title: 'Edit Certificates for Participation'
     _form: \Drupal\lab_migration\Form\LabMigrationCertificateParticipationEditForm
   requirements:
     _permission: 'Create custom Certificate'
 lab_migration.generate_lm_pdf:
-  path: /lab-migration/certificate/generate-pdf
+  path: /lab-migration/certificate/generate-pdf/{id}
   defaults:
     _title: 'Download Certificate'
     _form: \Drupal\lab_migration\Form\GenerateLmPdf

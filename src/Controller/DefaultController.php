@@ -1497,8 +1497,12 @@ $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();
           $details->institute_name,
           $details->name,
           $details->type,
-        Link::fromTextAndUrl('Download Certificate', 'lab-migration/certificate/generate-pdf/' . $details->proposal_id . '/' . $details->id),
-          Link::fromTextAndUrl('Edit Certificate', 'lab-migration/certificate/lm-participation/form/edit/' . $details->proposal_id . '/' . $details->id),
+        // Link::fromTextAndUrl('Download Certificate', 'lab-migration/certificate/generate-pdf/' . $details->proposal_id . '/' . $details->id)->toString(),
+       
+      
+          Link::fromTextAndUrl('Download Certificate', Url::fromUri('internal:/lab-migration/certificate/generate-pdf/',['id'=>$proposal_id]))->toString(),
+        // Link::fromTextAndUrl('Edit Certificate', 'lab-migration/certificate/lm-participation/form/edit/' . $details->proposal_id . '/' . $details->id),
+        $edit_url =  Link::fromTextAndUrl('Edit', Url::fromUri('internal:/lab-migration/certificate/lm-proposer/form/edit/',['id'=>$proposal_id]))->toString(),
         ];
       }
     } //$details_list as $details
@@ -1510,15 +1514,18 @@ $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();
       'Download Certificates',
       'Edit Certificates',
     ];
-    $output .= theme('table', [
-      'header' => $search_header,
-      'rows' => $search_rows,
-    ]);
+    $output = [
+      '#type' => 'table',
+      '#header' => $search_header,
+      '#rows' => $search_rows,
+    ];
     return $output;
   }
 
   public function verify_lab_migration_certificates($qr_code = 0) {
-    $qr_code = arg(3);
+    // $qr_code = arg(3);
+    $route_match = \Drupal::routeMatch();
+    $qr_code = (int) $route_match->getParameter('qr_code');
     $page_content = "";
     if ($qr_code) {
       $page_content = verify_qrcode_lm_fromdb($qr_code);

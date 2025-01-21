@@ -21,10 +21,14 @@ class LabMigrationCertificateEditForm extends FormBase {
   }
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $type = arg(2);
-    $action = arg(4);
-    $proposal_id = arg(5);
-    $certi_id = arg(6);
+    // $type = arg(2);
+    // $action = arg(4);
+    // $proposal_id = arg(5);
+    $route_match = \Drupal::routeMatch();
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
+    // $certi_id = arg(6);
+    $route_match = \Drupal::routeMatch();
+    $certi_id = (int) $route_match->getParameter('certi_id');
     //var_dump($type. "--".$action."--".$proposal_id."--".$certi_id);
     //die;
     if ($type == "lm-proposer" && $action == "edit") {
