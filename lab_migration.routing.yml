@@ -117,13 +117,13 @@ lab_migration.bulk_upload_code_form:
     _form: \Drupal\lab_migration\Form\LabMigrationBulkUploadCodeForm
   requirements:
     _permission: 'lab migration bulk manage code'
-lab_migration.lab_notes_form:
-  path: /lab-migration/code-approval/notes/{notes_id}
-  defaults:
-    _title: 'Notes for Reviewers'
-    _form: \Drupal\lab_migration\Form\LabMigrationLabNotesForm
-  requirements:
-    _permission: 'lab migration bulk manage code'
+# lab_migration.lab_notes_form:
+#   path: /lab-migration/code-approval/notes/{notes_id}
+#   defaults:
+#     _title: 'Notes for Reviewers'
+#     _form: \Drupal\lab_migration\Form\LabMigrationLabNotesForm
+  # requirements:
+    # _permission: 'lab migration bulk manage code'
 lab_migration.list_experiments:
   path: /lab-migration/code/list-experiments
   defaults:
@@ -243,12 +243,12 @@ lab_migration.settings_form:
     _form: \Drupal\lab_migration\Form\LabMigrationSettingsForm
   requirements:
     _permission: 'administer lab migration'
-lab_migration.lab_bulk_manage_exp_ajax:
-  path: /lab-bulk-manage-exp/ajax
-  defaults:
-    _title: 'Ajax callbacks'
-  requirements:
-    _permission: 'lab migration bulk manage code'
+# lab_migration.lab_bulk_manage_exp_ajax:
+#   path: /lab-bulk-manage-exp/ajax
+#   defaults:
+#     _title: 'Ajax callbacks'
+#   requirements:
+#     _permission: 'lab migration bulk manage code'
 lab_migration._list_all_lm_certificates:
   path: /lab-migration/certificate/
   defaults:
@@ -283,7 +283,7 @@ lab_migration.certificate_participation_edit_form:
     _title: 'Edit Certificates for Participation'
     _form: \Drupal\lab_migration\Form\LabMigrationCertificateParticipationEditForm
   requirements:
-    _permission: 'Create custom Certificate'
+    _permission: 'Create custom Certificate'  
 lab_migration.generate_lm_pdf:
   path: /lab-migration/certificate/generate-pdf/{id}
   defaults:

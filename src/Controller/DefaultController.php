@@ -81,12 +81,14 @@ class DefaultController extends ControllerBase {
     /* get list of solution proposal where the solution_provider_uid is set to some userid except 0 and solution_status is also 1 */
     $pending_rows = [];
     //$pending_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE solution_provider_uid != 0 AND solution_status = 1 ORDER BY id DESC");
-    $query = \Drupal::database()->select('lab_migration_proposal');
-    $query->fields('lab_migration_proposal');
-    $query->condition('solution_provider_uid', 0, '!=');
-    $query->condition('solution_status', 1);
-    $query->orderBy('id', 'DESC');
-    $pending_q = $query->execute();
+    $query = \Drupal::database()->select('lab_migration_proposal', 'lmp');
+$query->fields('lmp');
+$query->condition('solution_provider_uid', 0, '!=');
+$query->condition('solution_status', 1);
+$query->orderBy('creation_date', 'DESC');
+$query->orderBy('id', 'DESC');
+$pending_q = $query->execute();
+
     while ($pending_data = $pending_q->fetchObject()) {
       $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
       $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['id'=>$pending_data->id]))->toString();
@@ -114,13 +116,16 @@ class DefaultController extends ControllerBase {
       'Title of the Lab',
       'Action',
     ];
-    $output =  [
+    $output = [
       '#type' => 'table',
       '#header' => $pending_header,
       '#rows' => $pending_rows,
-       '#empty' => 'No rows found',
+      '#empty' => 'No rows found',
+      '#cache' => [
+        'max-age' => 0,
+      ],
     ];
-    return $output;
+        return $output;
   }
 
   public function lab_migration_proposal_pending_solution() {
