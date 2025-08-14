@@ -118,7 +118,7 @@ lab_migration.bulk_upload_code_form:
   requirements:
     _permission: 'lab migration bulk manage code'
 lab_migration.lab_notes_form:
-  path: /lab-migration/code-approval/notes
+  path: /lab-migration/code-approval/notes/{notes_id}
   defaults:
     _title: 'Notes for Reviewers'
     _form: \Drupal\lab_migration\Form\LabMigrationLabNotesForm
@@ -250,7 +250,7 @@ lab_migration.lab_bulk_manage_exp_ajax:
   requirements:
     _permission: 'lab migration bulk manage code'
 lab_migration._list_all_lm_certificates:
-  path: /lab-migration/certificate
+  path: /lab-migration/certificate/
   defaults:
     _title: 'List Of All Certificates LM'
     _controller: '\Drupal\lab_migration\Controller\DefaultController::_list_all_lm_certificates'

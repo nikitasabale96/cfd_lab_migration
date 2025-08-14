@@ -248,32 +248,38 @@ $query = \Drupal::database()->select('lab_migration_solution_files', 's');
     $solution_list_q = $query->execute();
     if ($solution_list_q) {
       $solution_files_rows = [];
-      while ($solution_list_data = $solution_list_q->fetchObject()) {
+      $query = \Drupal::database()->select('lab_migration_solution_files', 's');
+      $query->fields('s');
+      $query->condition('solution_id', $form_state->getValue('solution_list'));
+      $solution_list_q = $query->execute();
+      if ($solution_list_q) {
+        $solution_files_rows = [];
+        $solution_files_rows = [];
 
-//var_dump($solution_list_data);die;
-        $solution_file_type = '';
-        switch ($solution_list_data->filetype) {
-          case 'S':
-            $solution_file_type = 'Source or Main file';
-            break;
-          case 'R':
-            $solution_file_type = 'Result file';
-            break;
-          case 'X':
-            $solution_file_type = 'xcos file';
-            break;
-          default:
-            $solution_file_type = 'Unknown';
-            break;
-        }
-      
+        while ($solution_list_data = $solution_list_q->fetchObject()) {
+            $solution_file_type = '';
+            switch ($solution_list_data->filetype) {
+                case 'S':
+                    $solution_file_type = 'Source or Main file';
+                    break;
+                case 'R':
+                    $solution_file_type = 'Result file';
+                    break;
+                case 'X':
+                    $solution_file_type = 'xcos file';
+                    break;
+                default:
+                    $solution_file_type = 'Unknown';
+                    break;
+            }
+ 
         // Create file download link
         $items = [
                  Link::fromTextAndUrl($solution_list_data->filename, Url::fromUri('internal:/lab-migration/full-download/lab/' . $solution_list_data->id))->toString(),
           "{$solution_file_type}"
         ];
+        }
       }
-    }
     array_push($solution_files_rows, $items);
     //var_dump($solution_rows);die;
       $form['download_solution_wrapper']['solution_files'] = [
@@ -302,6 +308,7 @@ $form['submit'] = [
 ];
      return $form;
   }
+}
   public function ajax_experiment_list_callback(array &$form, FormStateInterface $form_state) {
     return $form['download_lab_wrapper'];
 

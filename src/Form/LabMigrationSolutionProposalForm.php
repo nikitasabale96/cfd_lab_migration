@@ -10,6 +10,11 @@ namespace Drupal\lab_migration\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
 
 class LabMigrationSolutionProposalForm extends FormBase {
 
@@ -22,23 +27,34 @@ class LabMigrationSolutionProposalForm extends FormBase {
 
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $proposal_id = (int) arg(2);
-    //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
-    $query = \Drupal::database()->select('lab_migration_proposal');
-    $query->fields('lab_migration_proposal');
+    // $proposal_id = (int) arg(2);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
+
+    // $proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
+    $query = \Drupal::database()->select('lab_migration_proposal', 'lmp');
+    $query->fields('lmp');
     $query->condition('id', $proposal_id);
-    $proposal_q = $query->execute();
-    $proposal_data = $proposal_q->fetchObject();
-    if (!$proposal_data) {
-      \Drupal::messenger()->addmessage("Invalid proposal.", 'error');
-      drupal_goto('');
-    }
+    $proposal_data = $query->execute()->fetchObject();
+    
+    // if (!$proposal_data) {
+      // \Drupal::messenger()->addError($this->t('Invalid proposal.'));
+    // }
     //var_dump($proposal_data->name); die;
+    
+    $proposer_link = Link::fromTextAndUrl(
+      $proposal_data->name_title . ' ' . $proposal_data->name,
+      Url::fromUri('internal:/user/' . $proposal_data->uid)
+    )->toRenderable();
+    
+ 
     $form['name'] = [
       '#type' => 'item',
-      '#markup' => l($proposal_data->name_title . ' ' . $proposal_data->name, 'user/' . $proposal_data->uid),
-      '#title' => t('Proposer Name'),
+      '#title' => $this->t('Proposer Name'),
+      'link' => $proposer_link,
     ];
+    
     $form['lab_title'] = [
       '#type' => 'item',
       '#markup' => $proposal_data->lab_title,
@@ -58,6 +74,15 @@ class LabMigrationSolutionProposalForm extends FormBase {
       '#markup' => $experiment_html,
       '#title' => t('Experiment List'),
     ];
+      if (!$proposal_id) {
+        $form['error'] = [
+          '#markup' => $this->t('Proposal ID missing from URL.'),
+        ];
+        return $form;
+      }
+    
+    
+    
     $form['solution_provider_name_title'] = [
       '#type' => 'select',
       '#title' => t('Title'),
@@ -94,7 +119,7 @@ class LabMigrationSolutionProposalForm extends FormBase {
     $form['solution_provider_department'] = [
       '#type' => 'select',
       '#title' => t('Department/Branch'),
-      '#options' => _lm_list_of_departments(),
+      '#options' => \Drupal::service('lab_migration_global')->_lm_list_of_departments(),
       '#required' => TRUE,
     ];
     $form['solution_provider_university'] = [
@@ -163,7 +188,7 @@ class LabMigrationSolutionProposalForm extends FormBase {
     $form['all_state'] = [
       '#type' => 'select',
       '#title' => t('State'),
-      '#options' => _lm_list_of_states(),
+      '#options' => \Drupal::service('lab_migration_global')->_lm_list_of_states(),
       '#validated' => TRUE,
       '#states' => [
         'visible' => [
@@ -176,7 +201,7 @@ class LabMigrationSolutionProposalForm extends FormBase {
     $form['city'] = [
       '#type' => 'select',
       '#title' => t('City'),
-      '#options' => _lm_list_of_cities(),
+      '#options' => \Drupal::service('lab_migration_global')->_lm_list_of_cities(),
       '#validated' => TRUE,
       '#states' => [
         'visible' => [
@@ -289,13 +314,17 @@ class LabMigrationSolutionProposalForm extends FormBase {
     $solution_provider_q = $query->execute();
     if ($solution_provider_q->fetchObject()) {
       $form_state->setErrorByName('', t("You have already applied for a solution. Please compelete that before applying for another solution."));
-      drupal_goto('lab-migration/open-proposal');
+      // drupal_goto('lab-migration/open-proposal');
     }
   }
 
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $proposal_id = (int) arg(2);
+    // $proposal_id = (int) arg(2);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
+
     if ($form_state->getValue(['version']) == 'olderversion') {
       $form_state->setValue(['version'], $form_state->getValue(['older']));
     }
@@ -307,11 +336,11 @@ class LabMigrationSolutionProposalForm extends FormBase {
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addmessage("Invalid proposal.", 'error');
-      drupal_goto('lab-migration/open-proposal');
+      // drupal_goto('lab-migration/open-proposal');
     }
     if ($proposal_data->solution_provider_uid != 0) {
       \Drupal::messenger()->addmessage("Someone has already applied for solving this Lab.", 'error');
-      drupal_goto('lab-migration/open-proposal');
+      // drupal_goto('lab-migration/open-proposal');
     }
     $query = "UPDATE {lab_migration_proposal} set solution_provider_uid = :uid, solution_status = 1, solution_provider_name_title = :solution_provider_name_title, solution_provider_name = :solution_provider_contact_name, solution_provider_contact_ph = :solution_provider_contact_ph, solution_provider_department = :solution_provider_department, solution_provider_university = :solution_provider_university , solution_provider_city = :solution_provider_city, solution_provider_pincode = :solution_provider_pincode, solution_provider_state = :solution_provider_state,solution_provider_country = :solution_provider_country WHERE id = :proposal_id";
     $args = [
@@ -330,30 +359,30 @@ class LabMigrationSolutionProposalForm extends FormBase {
 
     $result = \Drupal::database()->query($query, $args);
     \Drupal::messenger()->addmessage("We have received your application. We will get back to you soon.", 'status');
-    /* sending email */
-    $email_to = $user->mail;
-    $from = $config->get('lab_migration_from_email', '');
-    $bcc = $config->get('lab_migration_emails', '');
-    $cc = $config->get('lab_migration_cc_emails', '');
-    $param['solution_proposal_received']['proposal_id'] = $proposal_id;
-    $param['solution_proposal_received']['user_id'] = $user->uid;
-    $param['solution_proposal_received']['headers'] = [
-      'From' => $from,
-      'MIME-Version' => '1.0',
-      'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-      'Content-Transfer-Encoding' => '8Bit',
-      'X-Mailer' => 'Drupal',
-      'Cc' => $cc,
-      'Bcc' => $bcc,
-    ];
-    if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to, language_default(), $param, $from, TRUE)) {
-      \Drupal::messenger()->addmessage('Error sending email message.', 'error');
-    }
+    // /* sending email */
+    // $email_to = $user->mail;
+    // $from = $config->get('lab_migration_from_email', '');
+    // $bcc = $config->get('lab_migration_emails', '');
+    // $cc = $config->get('lab_migration_cc_emails', '');
+    // $param['solution_proposal_received']['proposal_id'] = $proposal_id;
+    // $param['solution_proposal_received']['user_id'] = $user->uid;
+    // $param['solution_proposal_received']['headers'] = [
+    //   'From' => $from,
+    //   'MIME-Version' => '1.0',
+    //   'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+    //   'Content-Transfer-Encoding' => '8Bit',
+    //   'X-Mailer' => 'Drupal',
+    //   'Cc' => $cc,
+    //   'Bcc' => $bcc,
+    // ];
+    // if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to, language_default(), $param, $from, TRUE)) {
+    //   \Drupal::messenger()->addmessage('Error sending email message.', 'error');
+    // }
     /* sending email */
     /* $email_to = $config->get('lab_migration_emails', '');
     if (!drupal_mail('lab_migration', 'solution_proposal_received', $email_to , language_default(), $param, $config->get('lab_migration_from_email', NULL), TRUE))
     \Drupal::messenger()->addmessage('Error sending email message.', 'error');*/
-    drupal_goto('lab-migration/open-proposal');
+    // drupal_goto('lab-migration/open-proposal');
   }
 
 }

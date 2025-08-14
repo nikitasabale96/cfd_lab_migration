@@ -131,6 +131,18 @@ $response->send();
       '#required' => TRUE,
     ];
     
+     /*$form['dwsim_version'] = array(
+    '#type' => 'select',
+    '#title' => t('DWSIM version used'),
+    '#options' => _lm_list_of_software_version(),
+    '#required' => TRUE,
+  );*/
+  $form['version'] = array(
+    '#type' => 'hidden',        
+    '#value' => 'Not available',
+    
+);
+
     $form['toolbox_used'] = [
       '#type' => 'hidden',
       '#title' => t('Toolbox used (If any)'),
@@ -429,7 +441,7 @@ $response->send();
     /* creating file path */
     $file_path = 'EXP' . $experiment_data->number . '/' . 'CODE' . $experiment_data->number . '.' . $form_state->getValue(['code_number']) . '/';
     /* creating solution database entry */
-    $query = "INSERT INTO {lab_migration_solution} (experiment_id, approver_uid, code_number, caption, approval_date, approval_status, timestamp, os_used, toolbox_used) VALUES (:experiment_id, :approver_uid, :code_number, :caption, :approval_date, :approval_status, :timestamp, :os_used, :toolbox_used)";
+    $query = "INSERT INTO {lab_migration_solution} (experiment_id, approver_uid, code_number, caption, approval_date, approval_status, timestamp, os_used,version, toolbox_used) VALUES (:experiment_id, :approver_uid, :code_number, :caption, :approval_date, :approval_status, :timestamp, :os_used, :version,:toolbox_used)";
     $args = [
       ":experiment_id" => $experiment_id,
       ":approver_uid" => 0,
@@ -439,7 +451,9 @@ $response->send();
       ":approval_status" => 0,
       ":timestamp" => time(),
       ":os_used" => $form_state->getValue(['os_used']),
+      ":version" => $form_state->getValue(['version']),
       ":toolbox_used" => $form_state->getValue(['toolbox_used']),
+    
     ];
     $solution_id = \Drupal::database()->query($query, $args, [
       'return' => Database::RETURN_INSERT_ID

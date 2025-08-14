@@ -23,7 +23,10 @@ class LabMigrationLabNotesForm extends FormBase {
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d LIMIT 1", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -33,7 +36,7 @@ class LabMigrationLabNotesForm extends FormBase {
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addmessage(t('Invalid lab selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/code-approval');
+      // drupal_goto('lab-migration/code-approval');
       return;
     }
     /* get current notes */
@@ -64,7 +67,7 @@ class LabMigrationLabNotesForm extends FormBase {
     ];
     $form['cancel'] = [
       '#type' => 'markup',
-      '#value' => l(t('Back'), 'lab-migration/code-approval'),
+      // '#value' => l(t('Back'), 'lab-migration/code-approval'),
     ];
     return $form;
   }
@@ -72,7 +75,11 @@ class LabMigrationLabNotesForm extends FormBase {
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     /* get current proposal */
-    $proposal_id = (int) arg(3);
+    // $proposal_id = (int) arg(3);
+    $route_match = \Drupal::routeMatch();
+
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
+
     //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d LIMIT 1", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
@@ -82,7 +89,7 @@ class LabMigrationLabNotesForm extends FormBase {
     $proposal_data = $proposal_q->fetchObject();
     if (!$proposal_data) {
       \Drupal::messenger()->addmessage(t('Invalid lab selected. Please try again.'), 'error');
-      drupal_goto('lab-migration/code-approval');
+      // drupal_goto('lab-migration/code-approval');
       return;
     }
     /* find existing notes */
