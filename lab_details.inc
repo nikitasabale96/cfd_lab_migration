@@ -60,7 +60,7 @@ function lab_migration_labs_progress_all()
     $result = $query->execute();
     if ($result->rowCount() == 0)
       {
-        $page_content .= "We will in process to update lab migration data";
+        $page_content .= "Lab Migration data will be available shortly";
       }
     else
       {
