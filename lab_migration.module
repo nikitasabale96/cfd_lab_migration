@@ -82,12 +82,12 @@ case 'proposal_received':
   $site_name = \Drupal::config('system.site')->get('name');
 
   $message['headers'] = $params['proposal_received']['headers'];
-  $message['subject'] = t('[!site_name] Your Lab migration proposal has been received', [
-    '!site_name' => $site_name,
+  $message['subject'] = t('[@site] Your Lab migration proposal has been received', [
+    '@site' => $site_name,
   ], ['language' => $language]);
 
   $message['body'][] = t('
-Dear !user_name,
+Dear @user_name,
 
 We have received your Lab migration proposal with the following details:
 
@@ -108,7 +108,7 @@ Your proposal is under review. You will soon receive an email when the same has 
 
 Best Wishes,
 
-!site_name Team,
+@site_name Team,
 FOSSEE, IIT Bombay',
     [
       '!user_name' => $user->getDisplayName(),
@@ -127,7 +127,6 @@ FOSSEE, IIT Bombay',
   );
 
   break;
-
 case 'proposal_approved':
 
   $proposal_id = $params['proposal_approved']['proposal_id'];
@@ -206,7 +205,7 @@ Congratulations! Your Lab migration proposal with the below details has been app
 @experiments<br><br>
 
 Please ensure that ALL the guidelines for coding are strictly followed:<br>
-https://r.fossee.in/lab-migration/lab-migration-guidelines<br><br>
+https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines
 
 Best Wishes,<br>
 @site Team<br>
@@ -227,6 +226,7 @@ FOSSEE, IIT Bombay',
   );
 
   break;
+
 case 'proposal_disapproved':
 
 
@@ -920,103 +920,115 @@ FOSSEE, IIT Bombay', [
 
 
 
-    case 'proposal_completed':
+   case 'proposal_completed':
 
-      /* Load proposal data */
-      $query = \Drupal::database()->select('lab_migration_proposal', 'p');
-      $query->fields('p');
-      $query->condition('id', $params['proposal_completed']['proposal_id']);
-      $query->range(0, 1);
-      $proposal_data = $query->execute()->fetchObject();
+  $database = \Drupal::database();
 
-      if (!$proposal_data) {
-        return;
+  /* Load proposal */
+  $proposal_data = $database->select('lab_migration_proposal', 'p')
+    ->fields('p')
+    ->condition('id', $params['proposal_id'])
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  if (!$proposal_data) {
+    break;
+  }
+
+  /* Solution provider */
+  if ($proposal_data->solution_provider_uid == 0) {
+    $solution_provider_user = 'Open';
+  }
+  elseif ($proposal_data->solution_provider_uid == $proposal_data->uid) {
+    $solution_provider_user = 'Proposer';
+  }
+  else {
+    $solution_provider = \Drupal\user\Entity\User::load($proposal_data->solution_provider_uid);
+    $solution_provider_user = $solution_provider
+      ? $solution_provider->getDisplayName()
+      : 'Unknown';
+  }
+
+  /* Load experiments */
+  $experiment_q = $database->select('lab_migration_experiment', 'e')
+    ->fields('e')
+    ->condition('proposal_id', $params['proposal_id'])
+    ->orderBy('number', 'ASC')
+    ->execute();
+
+  $experiment_list = '';
+  foreach ($experiment_q as $experiment_data) {
+    $experiment_list .=
+      $experiment_data->number . ') ' .
+      $experiment_data->title . PHP_EOL .
+      'Description: ' . $experiment_data->description . PHP_EOL . PHP_EOL;
+  }
+
+  /* Load user */
+  $user_data = \Drupal\user\Entity\User::load($params['user_id']);
+  $user_email = $user_data?->getEmail() ?: '';
+  $user_name  = $user_data?->getDisplayName() ?: 'User';
+
+  /* Site name */
+  $site_name = \Drupal::config('system.site')->get('name');
+
+  /* Subject */
+  $message['subject'] = t('[!site] Congratulations on completion of the Lab migration', [
+    '!site' => $site_name,
+  ]);
+
+  /* Body */
+  $message['body'][] = t('Dear @name,', ['@name' => $user_name]);
+  $message['body'][] = '';
+  $message['body'][] = t('Following Lab migration has been completed successfully:');
+  $message['body'][] = '';
+
+  $message['body'][] = t('Full Name: @name', [
+    '@name' => $proposal_data->name_title . ' ' . $proposal_data->name,
+  ]);
+  $message['body'][] = t('Email: @mail', ['@mail' => $user_email]);
+  $message['body'][] = t('Contact No.: @contact', ['@contact' => $proposal_data->contact_ph]);
+  $message['body'][] = t('Department: @dept', ['@dept' => $proposal_data->department]);
+  $message['body'][] = t('University: @uni', ['@uni' => $proposal_data->university]);
+  $message['body'][] = t('City: @city', ['@city' => $proposal_data->city]);
+  $message['body'][] = t('State: @state', ['@state' => $proposal_data->state]);
+  $message['body'][] = '';
+
+  $message['body'][] = t('Solution Provided By: @provider', [
+    '@provider' => $solution_provider_user,
+  ]);
+  $message['body'][] = '';
+
+  $message['body'][] = t('List of experiments:');
+  $message['body'][] = $experiment_list;
+  $message['body'][] = '';
+
+  $message['body'][] = t('Your Lab solution is now available at the following link:');
+  $message['body'][] = 'https://cfd.fossee.in/lab-migration/lab-migration-run/' . $proposal_data->id;
+  $message['body'][] = '';
+
+  $message['body'][] = t('Now you should be able to propose a new Lab migration.');
+  $message['body'][] = '';
+
+  $message['body'][] = t('Please ensure that ALL the codes follow the guidelines:');
+  $message['body'][] = 'https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines';
+  $message['body'][] = '';
+
+  $message['body'][] = t('Best Wishes,');
+  $message['body'][] = $site_name . ' Team';
+  $message['body'][] = 'FOSSEE, IIT Bombay';
+
+  /* Headers */
+  if (!empty($params['headers'])) {
+    foreach ($params['headers'] as $k => $v) {
+      if (!empty($v)) {
+        $message['headers'][$k] = $v;
       }
+    }
+  }
 
-      /* Solution display */
-      if ($proposal_data->solution_display == 1) {
-        $solution_display = 'Yes';
-      }
-      else {
-        $solution_display = 'No';
-      }
-
-      /* Solution provider */
-      if ($proposal_data->solution_provider_uid == 0) {
-        $solution_provider_user = 'Open';
-      }
-      elseif ($proposal_data->solution_provider_uid == $proposal_data->uid) {
-        $solution_provider_user = 'Proposer';
-      }
-      else {
-        $provider_user = User::load($proposal_data->solution_provider_uid);
-        if ($provider_user) {
-          $solution_provider_user = $provider_user->getDisplayName();
-        }
-        else {
-          $solution_provider_user = 'Unknown';
-        }
-      }
-
-      /* Load experiments */
-      $query = \Drupal::database()->select('lab_migration_experiment', 'e');
-      $query->fields('e');
-      $query->condition('proposal_id', $params['proposal_completed']['proposal_id']);
-      $query->orderBy('number', 'ASC');
-      $experiment_q = $query->execute();
-
-      $experiment_list = "\n";
-      while ($experiment_data = $experiment_q->fetchObject()) {
-        $experiment_list .= '<p>' . $experiment_data->number . ') ' . $experiment_data->title . '<br> Description: ' . $experiment_data->description . '<br></p>';
-      }
-
-      /* Load user */
-      $user_data = User::load($params['proposal_completed']['user_id']);
-      $user_email = $user_data ? $user_data->getEmail() : '';
-
-      /* Headers */
-      if (!empty($params['proposal_completed']['headers'])) {
-        $message['headers'] = $params['proposal_completed']['headers'];
-      }
-
-      /* Subject */
-      $site_name = \Drupal::config('system.site')->get('name');
-
-      $message['subject'] = t('[@site] Congratulations for completion of the Lab migration', [
-        '@site' => $site_name,
-      ]);
-
-      /* Body */
-      $message['body'][] = t('
-Dear ' . $proposal_data->name . ',
-
-Following lab migration has been completed successfully:
-
-Full Name: ' . $proposal_data->name_title . ' ' . $proposal_data->name . '
-Email: ' . $user_email . '
-Contact No.: ' . $proposal_data->contact_ph . '
-Department/Branch: ' . $proposal_data->department . '
-University/Institute: ' . $proposal_data->university . '
-City: ' . $proposal_data->city . '
-State: ' . $proposal_data->state . '
-
-Solution for this lab has been provided by ' . $solution_provider_user . '
-
-List of experiments: ' . $experiment_list . '
-
-Your lab solution is now available at following link to download.
-
-https://r.fossee.in/lab-migration/lab-migration-run/' . $proposal_data->id . '
-
-Best Wishes,
-
-!site_name Team
-FOSSEE, IIT Bombay', [
-        '!site_name' => $site_name,
-      ]);
-
-      break;
-  
+  break;
 
   
 
