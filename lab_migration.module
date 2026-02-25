@@ -710,36 +710,36 @@ case 'solution_proposal_received':
 
   /* Body */
   $message['body'][] = t('
-Dear !provider,
+Dear @provider,
 
 We have received your proposal for providing solution for lab migration with the following details:
 
 List of experiments:
-!experiments
+@experiments
 
-Full Name: !fullname
-Email: !email
-Contact No.: !phone
-Department/Branch: !department
-University/Institute: !university
+Full Name: @fullname
+Email: @email
+Contact No.: @phone
+Department/Branch: @department
+University/Institute: @university
 
 Your proposal is under review. You will soon receive an email when the same has been approved / disapproved.
 
 Please ensure that ALL the codes follow guidelines at:
-https://r.fossee.in/lab-migration/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name'  => $site_name,
-    '!provider'  => $proposal_data->solution_provider_name,
-    '!experiments' => $experiment_list,
-    '!fullname'  => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
-    '!email'     => $user_data?->getEmail() ?? '',
-    '!phone'     => $proposal_data->solution_provider_contact_ph,
-    '!department'=> $proposal_data->department,
-    '!university'=> $proposal_data->solution_provider_university,
+    '@provider'  => $proposal_data->solution_provider_name,
+    '@experiments' => $experiment_list,
+    '@fullname'  => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
+    '@email'     => $user_data?->getEmail() ?? '',
+    '@phone'     => $proposal_data->solution_provider_contact_ph,
+    '@department'=> $proposal_data->department,
+    '@university'=> $proposal_data->solution_provider_university,
   ]);
 
   break;

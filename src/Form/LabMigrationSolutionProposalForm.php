@@ -45,47 +45,60 @@ $user_entity = \Drupal\user\Entity\User::load($current_user_id);
          ->condition('id', $proposal_id)
          ->execute()
          ->fetchObject();
-   
-      //  if (!$proposal_data) {
-      //    \Drupal::messenger()->addError($this->t('Invalid proposal.'));
-      //    return new RedirectResponse(Url::fromRoute('<front>')->toString());
-      //  }
-   
-       // Proposer name link.
-       $name_link = Link::fromTextAndUrl(
-         $proposal_data->name_title . ' ' . $proposal_data->name,
-         Url::fromRoute('entity.user.canonical', ['user' => $proposal_data->uid])
-       )->toString();
-   
-       $form['name'] = [
-         '#type' => 'item',
-         '#markup' => $name_link,
-         '#title' => $this->t('Proposer Name'),
-       ];
-   
-       $form['lab_title'] = [
-         '#type' => 'item',
-         '#markup' => $proposal_data->lab_title,
-         '#title' => $this->t('Title of the Lab'),
-       ];
-   
-       // Fetch experiments.
-       $experiment_q = \Drupal::database()
-         ->select('lab_migration_experiment', 'lme')
-         ->fields('lme')
-         ->condition('proposal_id', $proposal_id)
-         ->execute();
-   
-       $experiment_html = '';
-       foreach ($experiment_q as $experiment_data) {
-         $experiment_html .= $experiment_data->title . '<br/>';
-       }
-   
-       $form['experiment'] = [
-         '#type' => 'item',
-         '#markup' => $experiment_html,
-         '#title' => $this->t('Experiment List'),
-       ];
+
+
+         $uid = (int) ($proposal_data->uid ?? 0);
+
+if ($uid > 0) {
+  $link = Link::fromTextAndUrl(
+    $proposal_data->name_title . ' ' . $proposal_data->name,
+    Url::fromRoute('entity.user.canonical', ['user' => $uid])
+  )->toString();
+}
+else {
+  $link = $this->t('@name', [
+    '@name' => $proposal_data->name_title . ' ' . $proposal_data->name,
+  ]);
+}
+
+$form['name'] = [
+  '#type' => 'item',
+  '#markup' => $link,
+  '#title' => $this->t('Proposer Name'),
+];
+
+
+$form['lab_title'] = [
+  '#type' => 'item',
+  '#markup' => $proposal_data->lab_title ?? $this->t('Not available'),
+  '#title' => $this->t('Title of the Lab'),
+];
+
+
+$experiment_q = \Drupal::database()
+  ->select('lab_migration_experiment', 'lme')
+  ->fields('lme', ['title'])
+  ->condition('proposal_id', $proposal_id)
+  ->execute()
+  ->fetchCol();
+
+$experiment_html = '';
+
+if (!empty($experiment_q)) {
+  foreach ($experiment_q as $title) {
+    $experiment_html .= $title . '<br>';
+  }
+}
+else {
+  $experiment_html = $this->t('No experiments found.');
+}
+
+$form['experiment'] = [
+  '#type' => 'item',
+  '#markup' => $experiment_html,
+  '#title' => $this->t('Experiment List'),
+];
+
    
        // Form fields.
        $form['solution_provider_name_title'] = [
