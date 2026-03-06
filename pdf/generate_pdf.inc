@@ -157,13 +157,28 @@ function generate_lm_pdf()
 						// $pdf->SetFont('', '');
 						$sign = $path . "/pdf/images/pisign.png";
 						$copisign = $path . "/pdf/images/copisign.png";
-						$pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$sign1 = $path . "/pdf/images/sign-01.png";
+						$copisign1 = $path . "/pdf/images/sign-02.png";
+					
 						// $pdf->SetY(-70);
 						// $pdf->SetX(200);
 						// $pdf->SetTextColor(0, 0, 0);
 						// $pdf->SetFont('', '');
-						
-						$pdf->Image($copisign, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+						$creation_date = $data3->creation_date; 
+
+						if ($creation_date >= strtotime('2025-07-01')) {
+						$pdf->Image($sign1, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$pdf->Image($copisign1, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+						}
+						elseif ($creation_date >= strtotime('2024-10-01')) {
+							$pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+							$pdf->Image($copisign1, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+						}
+						else {
+							$pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+							$pdf->Image($copisign, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+						}
+					
 						$pdf->Image($pngAbsoluteFilePath, $pdf->GetX()+15, $pdf->GetY()+70, 30, 0);
 						//$pdf->Cell(0,7,'', 0,1,'L');
 						//$pdf->SetFont('Times', 'I', 12);
@@ -375,12 +390,28 @@ function generate_lm_pdf()
 						// $pdf->SetFont('', '');
 						$sign = $path . "/pdf/images/pisign.png";
 						$copisign = $path . "/pdf/images/copisign.png";
-						$pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$sign1 = $path . "/pdf/images/sign-01.png";
+						$copisign1 = $path . "/pdf/images/sign-02.png";
+						$creation_date = $data3->creation_date; 
+
+if ($creation_date >= strtotime('2025-07-01')) {
+  $pdf->Image($sign1, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$pdf->Image($copisign1, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+}
+elseif ($creation_date >= strtotime('2024-10-01')) {
+    $pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$pdf->Image($copisign1, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+}
+else {
+	$pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
+						$pdf->Image($copisign, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+}
+						// $pdf->Image($sign, $pdf->GetX()+75, $pdf->GetY() + 50, 75, 0);
 						// $pdf->SetX(200);
 						// $pdf->SetTextColor(0, 0, 0);
 						// $pdf->SetFont('', '');
 						// $copisign = $path . "/pdf/images/copisign.png";
-						$pdf->Image($copisign, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
+						// $pdf->Image($copisign, $pdf->GetX()+160, $pdf->GetY() + 50, 75, 0);
 						$pdf->Image($pngAbsoluteFilePath, $pdf->GetX()+15, $pdf->GetY()+70, 30, 0);
 						//$pdf->Cell(0,7,'', 0,1,'L');
 						//$pdf->SetFont('Times', 'I', 12);
