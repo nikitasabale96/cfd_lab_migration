@@ -927,11 +927,11 @@ FOSSEE, IIT Bombay', [
   /* Load proposal */
   $proposal_data = $database->select('lab_migration_proposal', 'p')
     ->fields('p')
-    ->condition('id', $params['proposal_id'])
+    ->condition('id', $params['proposal_completed']['proposal_id'])
     ->range(0, 1)
     ->execute()
     ->fetchObject();
-
+//var_dump($params['proposal_completed']['proposal_id']);die;
   if (!$proposal_data) {
     break;
   }
@@ -974,9 +974,10 @@ FOSSEE, IIT Bombay', [
   $site_name = \Drupal::config('system.site')->get('name');
 
   /* Subject */
-  $message['subject'] = t('[!site] Congratulations on completion of the Lab migration', [
-    '!site' => $site_name,
+  $message['subject'] = t('@site Congratulations on completion of the Lab migration', [
+    '@site' => $site_name,
   ]);
+  //var_dump($message['subject']);die;
 
   /* Body */
   $message['body'][] = t('Dear @name,', ['@name' => $user_name]);

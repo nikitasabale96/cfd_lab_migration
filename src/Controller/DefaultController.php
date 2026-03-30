@@ -29,36 +29,106 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
  */
 class DefaultController extends ControllerBase {
 
+//   public function lab_migration_proposal_pending() {
+//     /* get pending proposals to be approved */
+//     $pending_rows = [];
+//     //$pending_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE approval_status = 0 ORDER BY id DESC");
+//     $query = \Drupal::database()->select('lab_migration_proposal');
+//     $query->fields('lab_migration_proposal');
+//     $query->condition('approval_status', 0);
+//     $query->orderBy('id', 'DESC');
+//     $pending_q = $query->execute();
+//     while ($pending_data = $pending_q->fetchObject()) {
+//       // $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
+//     //   $approval_url = Link::fromTextAndUrl('Approve',Url::fromRoute('lab_migration.proposal_approval_form', [
+//     // 'id' => $pending_data->id
+//     $approval_url = Link::fromTextAndUrl(
+//   'Approve',
+//   Url::fromRoute('lab_migration.proposal_approval_form', [
+//     'proposal_id' => $pending_data->id
+//   ])
+// )->toString();
+  
+//       $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['id'=>$pending_data->id]))->toString();
+//       $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $approval_url, '@linkReject' => $edit_url));
+//       $pending_rows[$pending_data->id] = [
+//         date('d-m-Y', $pending_data->creation_date),
+
+//         // Create the link with the user's name as the link text.
+//        Link::fromTextAndUrl($pending_data->name, Url::fromRoute('entity.user.canonical', ['user' => $pending_data->uid])),
+      
+
+//        // Link::fromTextAndUrl($pending_data->name, 'user/' . $pending_data->uid),
+//        $pending_data->lab_title,
+//        $pending_data->department,
+//        $mainLink 
+     
+//       ];
+//     }
+//     /* check if there are any pending proposals */
+//     // if (!$pending_rows) {
+//     //   \Drupal::messenger()->addmessage(t('There are no pending proposals.'), 'status');
+//     //   return '';
+//     // }
+//     $pending_header = [
+//       'Date of Submission',
+//       'Name',
+//       'Title of the Lab',
+//       'Department',
+//       'Action',
+//     ];
+//     //$output = theme_table($pending_header, $pending_rows);
+//     $output =  [
+//       '#type' => 'table',
+//       '#header' => $pending_header,
+//       '#rows' => $pending_rows,
+//       '#empty' => 'no rows found',
+//     ];
+//     return $output;
+//   }
+
+
   public function lab_migration_proposal_pending() {
     /* get pending proposals to be approved */
     $pending_rows = [];
     //$pending_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE approval_status = 0 ORDER BY id DESC");
-    $query = \Drupal::database()->select('lab_migration_proposal');
+    $query =\Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('approval_status', 0);
     $query->orderBy('id', 'DESC');
     $pending_q = $query->execute();
     while ($pending_data = $pending_q->fetchObject()) {
-      $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
-      $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['id'=>$pending_data->id]))->toString();
+      // $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
+      $approval_url = Link::fromTextAndUrl(
+        'Approve',
+        Url::fromRoute('lab_migration.proposal_approval_form', ['proposal_id' => $pending_data->id])
+      )->toString();
+      
+      $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['proposal_id'=>$pending_data->id]))->toString();
       $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $approval_url, '@linkReject' => $edit_url));
       $pending_rows[$pending_data->id] = [
         date('d-m-Y', $pending_data->creation_date),
-
-        // Create the link with the user's name as the link text.
+        
+       // Create the link with the user's name as the link text.
        Link::fromTextAndUrl($pending_data->name, Url::fromRoute('entity.user.canonical', ['user' => $pending_data->uid])),
       
 
-       // Link::fromTextAndUrl($pending_data->name, 'user/' . $pending_data->uid),
-       $pending_data->lab_title,
-       $pending_data->department,
-       $mainLink 
-     
+        // Link::fromTextAndUrl($pending_data->name, 'user/' . $pending_data->uid),
+        $pending_data->lab_title,
+        $pending_data->department,
+        $mainLink 
+      
+    
+        
+        // Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.manage_proposal_approve', ['id' => $pending_data->id]))
+        // ->toString() . ' | ' . 
+        // Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form', ['id' => $pending_data->id]))->toString()
+        // Link::fromTextAndUrl('Approve', 'lab_migration_manage_proposal_approve' . $pending_data->id) . ' | ' . Link::fromTextAndUrl('Edit', 'lab-migration/manage-proposal/edit/' . $pending_data->id),
       ];
     }
     /* check if there are any pending proposals */
     // if (!$pending_rows) {
-    //   \Drupal::messenger()->addmessage(t('There are no pending proposals.'), 'status');
+    //   \Drupal::messenger()->addMessage($this->t('There are no pending proposals.'), 'status');
     //   return '';
     // }
     $pending_header = [
@@ -66,18 +136,77 @@ class DefaultController extends ControllerBase {
       'Name',
       'Title of the Lab',
       'Department',
-      'Action',
+      'Action'
     ];
-    //$output = theme_table($pending_header, $pending_rows);
+    //$output = drupal_render()_table($pending_header, $pending_rows);
     $output =  [
       '#type' => 'table',
       '#header' => $pending_header,
       '#rows' => $pending_rows,
       '#empty' => 'no rows found',
     ];
+    //var_dump($output);die;
     return $output;
   }
+  
+  // public function lab_migration_solution_proposal_pending() {
+    
+  //   $pending_rows = [];
+  //   //$pending_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE approval_status = 0 ORDER BY id DESC");
+  //   $query =\Drupal::database()->select('lab_migration_proposal');
+  //   $query->fields('lab_migration_proposal');
+  //   // $query->condition('approval_status', 0);
+  //   $query->condition('solution_provider_uid', 0, '!=');
+  //   $query->condition('solution_status', 1);
+    
+  //   $query->orderBy('id', 'DESC');
+  //   $pending_q = $query->execute();
+  //   while ($pending_data = $pending_q->fetchObject()) {
+  //     $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.manage_proposal_approve',['id'=>$pending_data->id]))->toString();
 
+  //     $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['id'=>$pending_data->id]))->toString();
+  //     $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $approval_url, '@linkReject' => $edit_url));
+  //     $pending_rows[$pending_data->id] = [
+  //       date('d-m-Y', $pending_data->creation_date),
+        
+  //      // Create the link with the user's name as the link text.
+  //      Link::fromTextAndUrl($pending_data->name, Url::fromRoute('entity.user.canonical', ['user' => $pending_data->uid])),
+
+
+  //       // Link::fromTextAndUrl($pending_data->name, 'user/' . $pending_data->uid),
+  //       $pending_data->lab_title,
+  //       $pending_data->department,
+  //       $mainLink 
+      
+    
+        
+  //     ];
+  //   }
+  //   /* check if there are any pending proposals */
+  //   // if (!$pending_rows) {
+  //   //   \Drupal::messenger()->addMessage($this->t('There are no pending proposals.'), 'status');
+  //   //   return '';
+  //   // }
+  //   $pending_header = [
+  //     'Date of Submission',
+  //     'Name',
+  //     'Title of the Lab',
+  //     'Department',
+  //     'Action',
+  //   ];
+  //   //$output = drupal_render()_table($pending_header, $pending_rows);
+  //   $output =  [
+  //     '#type' => 'table',
+  //     '#header' => $pending_header,
+  //     '#rows' => $pending_rows,
+  //      '#empty' => 'No rows found'
+  //   ];
+   
+  //   return $output;
+  // }
+
+  
+  
   public function lab_migration_solution_proposal_pending() {
     /* get list of solution proposal where the solution_provider_uid is set to some userid except 0 and solution_status is also 1 */
     $pending_rows = [];
@@ -91,8 +220,14 @@ $query->orderBy('id', 'DESC');
 $pending_q = $query->execute();
 
     while ($pending_data = $pending_q->fetchObject()) {
-      $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
-      $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['id'=>$pending_data->id]))->toString();
+      // $approval_url = Link::fromTextAndUrl('Approve', Url::fromRoute('lab_migration.proposal_approval_form',['id'=>$pending_data->id]))->toString();
+      $approval_url = Link::fromTextAndUrl(
+  'Approve',
+  Url::fromRoute('lab_migration.proposal_approval_form', [
+    'proposal_id' => $pending_data->id
+  ])
+)->toString();
+      $edit_url =  Link::fromTextAndUrl('Edit', Url::fromRoute('lab_migration.proposal_edit_form',['proposal_id'=>$pending_data->id]))->toString();
       $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $approval_url, '@linkReject' => $edit_url));
       $pending_rows[$pending_data->id] = [
         date('d-m-Y', $pending_data->creation_date),
@@ -147,7 +282,7 @@ $pending_q = $query->execute();
        $link,
         $pending_data->lab_title,
         $pending_data->department,
-        Link::fromTextAndUrl('Status', Url::fromRoute('lab_migration.proposal_status_form', ['id' => $pending_data->id]))->toString(),
+        Link::fromTextAndUrl('Status', Url::fromRoute('lab_migration.proposal_status_form', ['proposal_id' => $pending_data->id]))->toString(),
         // Link::fromTextAndUrl('Status', 'internal:/lab-migration/manage-proposal/status/' . $pending_data->id),
         
       ];
@@ -204,7 +339,7 @@ $pending_q = $query->execute();
           break;
       }
 // var_dump($proposal_data);die;
-      $approval_url =  Link::fromTextAndUrl('Status', Url::fromRoute('lab_migration.proposal_status_form', ['id' => $proposal_data->id]))->toString();
+      $approval_url =  Link::fromTextAndUrl('Status', Url::fromRoute('lab_migration.proposal_status_form', ['proposal_id' => $proposal_data->id]))->toString();
       //var_dump($approval_url);die;
       // $edit_url =  Link::fromTextAndUrl('Edit', Url::fromUri('internal:/lab-migration/manage-proposal/edit/',['id'=>$proposal_data->id]))->toString();
       // $mainLink = t('@linkApprove | @linkReject', array('@linkApprove' => $approval_url, '@linkReject' => $edit_url));
@@ -272,7 +407,7 @@ $pending_q = $query->execute();
     $query->orderBy('id', 'DESC');
     $proposal_q = $query->execute();
     while ($proposal_data = $proposal_q->fetchObject()) {
-      $category_edit_url =  Link::fromTextAndUrl('Edit category', Url::fromRoute('lab_migration.category_edit_form',['id'=>$proposal_data->id]))->toString();
+      $category_edit_url =  Link::fromTextAndUrl('Edit category', Url::fromRoute('lab_migration.category_edit_form',['proposal_id'=>$proposal_data->id]))->toString();
      
         $proposal_rows[] = [
          
