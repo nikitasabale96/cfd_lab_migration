@@ -1042,7 +1042,8 @@ function lab_migration_download_solution_file() {
 public function lab_migration_download_problem_statement() {
     // Get the proposal ID from the route.
     $route_match = \Drupal::routeMatch();
-    $proposal_id = (int) $route_match->getParameter('id');
+$proposal_id = (int) $route_match->getParameter('proposal_id');
+    // var_dump($proposal_id);die;
     // var_dump($proposal_id);die;
     // Get the file path root.
     $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();

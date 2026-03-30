@@ -169,28 +169,40 @@ $proposal_id = (int) $route_match->getParameter('proposal_id');
       '#title' => t('Do you want to provide the solution'),
       '#markup' => $solution_provider,
     ];
-    if ($proposal_data->samplefilepath != "None") {
-      if ($proposal_data->solution_provider_uid == $proposal_data->uid) {
-        $form['samplecode'] = [
-          '#type' => 'markup',
-          // '#markup' => l('Download Sample Code', 'lab_migration/download/samplecode/' . $proposal_id) . "<br><br>" ,
-          '#markup' => Link::fromTextAndUrl(t('Download Sample Code'),
-          Url::fromUri('internal:/lab-migration/download/samplecode/' . $proposal_id)
-           )->toString() . '<br><br>',
-        ];
-      }
-      else {
-        if ($solution_provider_user_data) {
-          $form['samplecode'] = [
-            '#type' => 'markup',
-            // '#markup' => l('Download Sample Code', 'lab_migration/download/samplecode/' . $proposal_id) . "<br><br>" ,
-            '#markup' => Link::fromTextAndUrl(t('Download Sample Code'),
-              Url::fromUri('internal:/lab-migration/download/samplecode/' . $proposal_id)
-            )->toString() . '<br><br>',
+
+$url = Url::fromRoute('lab_migration.download_problem_statement', [
+  'proposal_id' => $proposal_data->id,
+]);
+
+$form['problem_statement_file'] = [
+  '#type' => 'item',
+  '#title' => $this->t('Problem statement file uploaded by the proposer'),
+  '#markup' => Link::fromTextAndUrl('View', $url)->toString(),
+];
+    // if ($proposal_data->samplefilepath != "None") {
+    //   if ($proposal_data->solution_provider_uid == $proposal_data->uid) {
+    //     $form['samplecode'] = [
+    //       '#type' => 'markup',
+    //       // '#markup' => l('Download Sample Code', 'lab_migration/download/samplecode/' . $proposal_id) . "<br><br>" ,
+    //       '#markup' => Link::fromTextAndUrl(t('Download Sample Code'),
+    //       Url::fromUri('internal:/lab-migration/download/samplecode/' . $proposal_id)
+    //        )->toString() . '<br><br>',
+    //     ];
+    //   }
+    //   else {
+    //     if ($solution_provider_user_data) {
+    //       $form['samplecode'] = [
+    //         '#type' => 'markup',
+    //         // '#markup' => l('Download Sample Code', 'lab_migration/download/samplecode/' . $proposal_id) . "<br><br>" ,
+    //         '#markup' => Link::fromTextAndUrl(t('Download Sample Code'),
+    //           Url::fromUri('internal:/lab-migration/download/samplecode/' . $proposal_id)
+    //         )->toString() . '<br><br>',
                     
-          ];
-        }
-      }
+    //       ];
+    //     }
+    //   }
+    
+
     
 
 
@@ -238,7 +250,7 @@ $proposal_id = (int) $route_match->getParameter('proposal_id');
 
         return $form;
   }
-}
+
 public function cancelForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
   $form_state->setRedirect('lab_migration.proposal_pending');
 }
@@ -276,7 +288,7 @@ public function cancelForm(array &$form, \Drupal\Core\Form\FormStateInterface $f
       else {
         \Drupal::messenger()->addMessage(t('Invalid proposal selected. Please try again.'), 'error');
         //drupal_goto('lab_migration/manage_proposal');
-        $url = Url::fromRoute('lab_migration.proposal_approval_form')->toString();
+        $url = Url::fromRoute('lab_migration.proposal_all')->toString();
        
      \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $url);
 
@@ -286,7 +298,7 @@ public function cancelForm(array &$form, \Drupal\Core\Form\FormStateInterface $f
     else {
       \Drupal::messenger()->addMessage(t('Invalid proposal selected. Please try again.'), 'error');
       //drupal_goto('lab_migration/manage_proposal');
-      $url = Url::fromRoute('lab_migration.proposal_approval_form')->toString();
+      $url = Url::fromRoute('lab_migration.proposal_all')->toString();
        
      \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $url);
 
