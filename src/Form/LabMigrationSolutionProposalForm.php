@@ -9,13 +9,7 @@ namespace Drupal\lab_migration\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
-use Drupal\user\Entity\User;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-
 
 class LabMigrationSolutionProposalForm extends FormBase {
 
@@ -26,243 +20,221 @@ class LabMigrationSolutionProposalForm extends FormBase {
     return 'lab_migration_solution_proposal_form';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    // $proposal_id = (int) arg(2);
     $route_match = \Drupal::routeMatch();
+    
+    // Unified parameter key
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
 
-    $proposal_id = (int) $route_match->getParameter('id');
-// var_dump($proposal_id);die;
-       // Load current user entity.
-       $current_user_id = \Drupal::currentUser()->id();
-$user_entity = \Drupal\user\Entity\User::load($current_user_id);
+    if (empty($proposal_id)) {
+      \Drupal::messenger()->addError($this->t('Proposal ID not found.'));
+      return $form;
+    }
 
+    $proposal_data = \Drupal::database()
+      ->select('lab_migration_proposal', 'lmp')
+      ->fields('lmp')
+      ->condition('id', $proposal_id)
+      ->execute()
+      ->fetchObject();
 
-       // Fetch proposal data.
-       $proposal_data = \Drupal::database()
-         ->select('lab_migration_proposal', 'lmp')
-         ->fields('lmp')
-         ->condition('id', $proposal_id)
-         ->execute()
-         ->fetchObject();
+    if (!$proposal_data) {
+      \Drupal::messenger()->addError($this->t('Proposal data not found.'));
+      return $form;
+    }
 
+    $form['name'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Proposer Name'),
+      '#markup' => $proposal_data->name_title . ' ' . $proposal_data->name,
+    ];
 
-         $uid = (int) ($proposal_data->uid ?? 0);
+    $form['lab_title'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Title of the Lab'),
+      '#markup' => $proposal_data->lab_title,
+    ];
 
-if ($uid > 0) {
-  $link = Link::fromTextAndUrl(
-    $proposal_data->name_title . ' ' . $proposal_data->name,
-    Url::fromRoute('entity.user.canonical', ['user' => $uid])
-  )->toString();
-}
-else {
-  $link = $this->t('@name', [
-    '@name' => $proposal_data->name_title . ' ' . $proposal_data->name,
-  ]);
-}
+    $experiment_html = '';
+    $query = \Drupal::database()->select('lab_migration_experiment');
+    $query->fields('lab_migration_experiment');
+    $query->condition('proposal_id', $proposal_id);
+    $experiment_q = $query->execute();
+    
+    while ($experiment_data = $experiment_q->fetchObject()) {
+      $experiment_html .= $experiment_data->title . '<br>';
+    }
+    
+    $form['experiment'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Experiment List'),
+      '#markup' => $experiment_html,
+    ];
+    
+    $form['solution_provider_name_title'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Title'),
+      '#options' => [
+        'Mr' => 'Mr',
+        'Ms' => 'Ms',
+        'Mrs' => 'Mrs',
+        'Dr' => 'Dr',
+        'Prof' => 'Prof',
+      ],
+      '#required' => TRUE,
+    ];
 
-$form['name'] = [
-  '#type' => 'item',
-  '#markup' => $link,
-  '#title' => $this->t('Proposer Name'),
-];
+    $form['solution_provider_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Name of the Solution Provider'),
+      '#maxlength' => 50,
+      '#required' => TRUE,
+    ];
 
+    $form['solution_provider_email_id'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Email'),
+      '#default_value' => $user->getEmail(),
+      '#disabled' => TRUE,
+    ];
 
-$form['lab_title'] = [
-  '#type' => 'item',
-  '#markup' => $proposal_data->lab_title ?? $this->t('Not available'),
-  '#title' => $this->t('Title of the Lab'),
-];
+    $form['solution_provider_contact_ph'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Contact No.'),
+      '#maxlength' => 15,
+      '#required' => TRUE,
+    ];
 
+    $form['solution_provider_department'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Department/Branch'),
+      '#options' => \Drupal::service("lab_migration_global")->_lm_list_of_departments(),
+      '#required' => TRUE,
+    ];
 
-$experiment_q = \Drupal::database()
-  ->select('lab_migration_experiment', 'lme')
-  ->fields('lme', ['title'])
-  ->condition('proposal_id', $proposal_id)
-  ->execute()
-  ->fetchCol();
+    $form['solution_provider_university'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('University/Institute'),
+      '#maxlength' => 50,
+      '#required' => TRUE,
+    ];
 
-$experiment_html = '';
+    $form['country'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Country'),
+      '#options' => [
+        'India' => 'India',
+        'Others' => 'Others',
+      ],
+      '#required' => TRUE,
+      '#tree' => TRUE,
+      '#validated' => TRUE,
+    ];
 
-if (!empty($experiment_q)) {
-  foreach ($experiment_q as $title) {
-    $experiment_html .= $title . '<br>';
+    $form['other_country'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Other than India'),
+      '#attributes' => [
+        'placeholder' => $this->t('Enter your country name')
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="country"]' => ['value' => 'Others']
+        ]
+      ],
+    ];
+
+    $form['other_state'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('State other than India'),
+      '#attributes' => [
+        'placeholder' => $this->t('Enter your state/region name')
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="country"]' => ['value' => 'Others']
+        ]
+      ],
+    ];
+
+    $form['other_city'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('City other than India'),
+      '#attributes' => [
+        'placeholder' => $this->t('Enter your city name')
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="country"]' => ['value' => 'Others']
+        ]
+      ],
+    ];
+
+    $form['all_state'] = [
+      '#type' => 'select',
+      '#title' => $this->t('State'),
+      '#options' => \Drupal::service("lab_migration_global")->_lm_list_of_states(),
+      '#validated' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="country"]' => ['value' => 'India']
+        ]
+      ],
+    ];
+
+    $form['city'] = [
+      '#type' => 'select',
+      '#title' => $this->t('City'),
+      '#options' => \Drupal::service("lab_migration_global")->_lm_list_of_cities(),
+      '#states' => [
+        'visible' => [
+          ':input[name="country"]' => ['value' => 'India']
+        ]
+      ],
+    ];
+
+    $form['pincode'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Pincode'),
+      '#maxlength' => 6,
+      '#required' => FALSE,
+      '#attributes' => [
+        'placeholder' => 'Enter pincode....'
+      ],
+    ];
+    
+    $form['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Apply for Solution'),
+    ];
+    
+    return $form;
   }
-}
-else {
-  $experiment_html = $this->t('No experiments found.');
-}
 
-$form['experiment'] = [
-  '#type' => 'item',
-  '#markup' => $experiment_html,
-  '#title' => $this->t('Experiment List'),
-];
-
-   
-       // Form fields.
-       $form['solution_provider_name_title'] = [
-         '#type' => 'select',
-         '#title' => $this->t('Title'),
-         '#options' => [
-           'Mr' => 'Mr',
-           'Ms' => 'Ms',
-           'Mrs' => 'Mrs',
-           'Dr' => 'Dr',
-           'Prof' => 'Prof',
-         ],
-         '#required' => TRUE,
-       ];
-   
-       $form['solution_provider_name'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('Name of the Solution Provider'),
-         '#size' => 30,
-         '#maxlength' => 50,
-         '#required' => TRUE,
-       ];
-   
-       $form['solution_provider_email_id'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('Email'),
-         '#size' => 30,
-        //  '#default_value' => $account->getEmail(),
-        '#default_value' => $user_entity ? $user_entity->getEmail() : '',
-         '#disabled' => TRUE,
-       ];
-   
-       $form['solution_provider_contact_ph'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('Contact No.'),
-         '#size' => 30,
-         '#maxlength' => 15,
-         '#required' => TRUE,
-       ];
-   
-       $form['solution_provider_department'] = [
-         '#type' => 'select',
-         '#title' => $this->t('Department/Branch'),
-         '#options' => \Drupal::service('lab_migration_global')->_lm_list_of_departments(), // Ensure this function exists and returns an array.
-         '#required' => TRUE,
-       ];
-   
-       $form['solution_provider_university'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('University/Institute'),
-         '#size' => 30,
-         '#maxlength' => 50,
-         '#required' => TRUE,
-       ];
-   
-       $form['country'] = [
-         '#type' => 'select',
-         '#title' => $this->t('Country'),
-         '#options' => [
-           'India' => 'India',
-           'Others' => 'Others',
-         ],
-         '#required' => TRUE,
-       ];
-   
-       $form['other_country'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('Other than India'),
-         '#size' => 100,
-         '#attributes' => ['placeholder' => $this->t('Enter your country name')],
-         '#states' => [
-           'visible' => [
-             ':input[name="country"]' => ['value' => 'Others'],
-           ],
-         ],
-       ];
-   
-       $form['other_state'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('State other than India'),
-         '#size' => 100,
-         '#attributes' => ['placeholder' => $this->t('Enter your state/region name')],
-         '#states' => [
-           'visible' => [
-             ':input[name="country"]' => ['value' => 'Others'],
-           ],
-         ],
-       ];
-   
-       $form['other_city'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('City other than India'),
-         '#size' => 100,
-         '#attributes' => ['placeholder' => $this->t('Enter your city name')],
-         '#states' => [
-           'visible' => [
-             ':input[name="country"]' => ['value' => 'Others'],
-           ],
-         ],
-       ];
-   
-       $form['all_state'] = [
-         '#type' => 'select',
-         '#title' => $this->t('State'),
-         '#options' => \Drupal::service('lab_migration_global')->_lm_list_of_states(),
-         '#states' => [
-           'visible' => [
-             ':input[name="country"]' => ['value' => 'India'],
-           ],
-         ],
-       ];
-   
-       $form['city'] = [
-         '#type' => 'select',
-         '#title' => $this->t('City'),
-         '#options' =>\Drupal::service('lab_migration_global')->_lm_list_of_cities(),
-         '#states' => [
-           'visible' => [
-             ':input[name="country"]' => ['value' => 'India'],
-           ],
-         ],
-       ];
-   
-       $form['pincode'] = [
-         '#type' => 'textfield',
-         '#title' => $this->t('Pincode'),
-         '#size' => 30,
-         '#maxlength' => 6,
-         '#attributes' => ['placeholder' => $this->t('Enter pincode....')],
-       ];
-   
-       $form['submit'] = [
-         '#type' => 'submit',
-         '#value' => $this->t('Apply for Solution'),
-       ];
-   
-       return $form;
-     }
-
-
- public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
     if ($form_state->getValue(['country']) == 'Others') {
       if ($form_state->getValue(['other_country']) == '') {
-        $form_state->setErrorByName('other_country', t('Enter country name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('other_country', $this->t('Enter country name'));
       }
       else {
-        $form_state->setValue(['country'], $form_state->getValue([
-          'other_country'
-          ]));
+        $form_state->setValue(['country'], $form_state->getValue(['other_country']));
       }
       if ($form_state->getValue(['other_state']) == '') {
-        $form_state->setErrorByName('other_state', t('Enter state name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('other_state', $this->t('Enter state name'));
       }
       else {
-        $form_state->setValue(['all_state'], $form_state->getValue([
-          'other_state'
-          ]));
+        $form_state->setValue(['all_state'], $form_state->getValue(['other_state']));
       }
       if ($form_state->getValue(['other_city']) == '') {
-        $form_state->setErrorByName('other_city', t('Enter city name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('other_city', $this->t('Enter city name'));
       }
       else {
         $form_state->setValue(['city'], $form_state->getValue(['other_city']));
@@ -270,177 +242,111 @@ $form['experiment'] = [
     }
     else {
       if ($form_state->getValue(['country']) == '') {
-        $form_state->setErrorByName('country', t('Select country name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('country', $this->t('Select country name'));
       }
       if ($form_state->getValue(['all_state']) == '') {
-        $form_state->setErrorByName('all_state', t('Select state name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('all_state', $this->t('Select state name'));
       }
       if ($form_state->getValue(['city']) == '') {
-        $form_state->setErrorByName('city', t('Select city name'));
-        // $form_state['values']['country'] = $form_state['values']['other_country'];
+        $form_state->setErrorByName('city', $this->t('Select city name'));
       }
     }
 
-    if ($form_state->getValue(['version']) == 'olderversion') {
-      if ($form_state->getValue(['older']) == '') {
-        $form_state->setErrorByName('older', t('Please provide valid version'));
-      }
-    }
-    return;
-    //$solution_provider_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE solution_provider_uid = ".$user->uid." AND approval_status IN (0, 1) AND solution_status IN (0, 1, 2)");
+    // Skip verification logic during dev validation bypasses if necessary, 
+    // but the query below remains updated to use standard API calls.
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
-    $query->condition('solution_provider_uid', $user->uid);
-    $query->condition('approval_status', [
-      0,
-      1,
-    ], 'IN');
-    $query->condition('solution_status', [
-      0,
-      1,
-      2,
-    ], 'IN');
+    $query->condition('solution_provider_uid', $user->id());
+    $query->condition('approval_status', [0, 1], 'IN');
+    $query->condition('solution_status', [0, 1, 2], 'IN');
     $solution_provider_q = $query->execute();
+    
     if ($solution_provider_q->fetchObject()) {
-      $form_state->setErrorByName('', t("You have already applied for a solution. Please compelete that before applying for another solution."));
-      // drupal_goto('lab-migration/open-proposal');
+      $form_state->setErrorByName('', $this->t("You have already applied for a solution. Please complete that before applying for another solution."));
+      $form_state->setRedirectUrl(\Drupal\Core\Url::fromUserInput('/lab-migration/open-proposal'));
     }
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $user = \Drupal::currentUser();
-    $uid = \Drupal::currentUser()->id();
-
-    // $proposal_id = (int) arg(2);
     $route_match = \Drupal::routeMatch();
+    
+    // FIX: Match parameter from buildForm() exactly
+    $proposal_id = (int) $route_match->getParameter('proposal_id');
 
-    $proposal_id = (int) $route_match->getParameter('id');
-
-    if ($form_state->getValue(['version']) == 'olderversion') {
-      $form_state->setValue(['version'], $form_state->getValue(['older']));
-    }
-    //$proposal_q = \Drupal::database()->query("SELECT * FROM {lab_migration_proposal} WHERE id = %d", $proposal_id);
     $query = \Drupal::database()->select('lab_migration_proposal');
     $query->fields('lab_migration_proposal');
     $query->condition('id', $proposal_id);
     $proposal_q = $query->execute();
     $proposal_data = $proposal_q->fetchObject();
-    // if (!$proposal_data) {
-    //   \Drupal::messenger()->addmessage("Invalid proposal.", 'error');
-    //   // drupal_goto('lab-migration/open-proposal');
-    // }
-    if ($proposal_data->solution_provider_uid != 0) {
-      \Drupal::messenger()->addmessage("Someone has already applied for solving this Lab.", 'error');
-      // drupal_goto('lab-migration/open-proposal');
+
+    if (!$proposal_data) {
+      \Drupal::messenger()->addMessage($this->t("Invalid proposal."), 'error');
+      $form_state->setRedirectUrl(\Drupal\Core\Url::fromUserInput('/lab-migration/open-proposal'));
+      return;
     }
-    $user = \Drupal::currentUser();
-    $query = "UPDATE {lab_migration_proposal} set solution_provider_uid = :uid, solution_status = 1, solution_provider_name_title = :solution_provider_name_title, solution_provider_name = :solution_provider_contact_name, solution_provider_contact_ph = :solution_provider_contact_ph, solution_provider_department = :solution_provider_department, solution_provider_university = :solution_provider_university , solution_provider_city = :solution_provider_city, solution_provider_pincode = :solution_provider_pincode, solution_provider_state = :solution_provider_state,solution_provider_country = :solution_provider_country WHERE id = :proposal_id";
-    $args = [
-      ":uid" => $user->id(),
-      ":solution_provider_name_title" => $form_state->getValue(['solution_provider_name_title']),
-      ":solution_provider_contact_name" => $form_state->getValue(['solution_provider_name']),
-      ":solution_provider_contact_ph" => $form_state->getValue(['solution_provider_contact_ph']),
-      ":solution_provider_department" => $form_state->getValue(['solution_provider_department']),
-      ":solution_provider_university" => $form_state->getValue(['solution_provider_university']),
-      ":solution_provider_city" => $form_state->getValue(['city']),
-      ":solution_provider_pincode" => $form_state->getValue(['pincode']),
-      ":solution_provider_state" => $form_state->getValue(['all_state']),
-      ":solution_provider_country" => $form_state->getValue(['country']),
-      ":proposal_id" => $proposal_id,
+
+    if ($proposal_data->solution_provider_uid != 0) {
+      \Drupal::messenger()->addMessage($this->t("Someone has already applied for solving this Lab."), 'error');
+      $form_state->setRedirectUrl(\Drupal\Core\Url::fromUserInput('/lab-migration/open-proposal'));
+      return;
+    }
+
+    // Modern Drupal Dynamic Update Query Execution
+    \Drupal::database()->update('lab_migration_proposal')
+      ->fields([
+        'solution_provider_uid' => $user->id(),
+        'solution_status' => 1,
+        'solution_provider_name_title' => $form_state->getValue(['solution_provider_name_title']),
+        'solution_provider_name' => $form_state->getValue(['solution_provider_name']),
+        'solution_provider_contact_ph' => $form_state->getValue(['solution_provider_contact_ph']),
+        'solution_provider_department' => $form_state->getValue(['solution_provider_department']),
+        'solution_provider_university' => $form_state->getValue(['solution_provider_university']),
+        'solution_provider_city' => $form_state->getValue(['city']),
+        'solution_provider_pincode' => $form_state->getValue(['pincode']),
+        'solution_provider_state' => $form_state->getValue(['all_state']),
+        'solution_provider_country' => $form_state->getValue(['country']),
+      ])
+      ->condition('id', $proposal_id)
+      ->execute();
+
+    \Drupal::messenger()->addMessage($this->t("We have received your application. We will get back to you soon."), 'status');
+    
+    /* Email Notification Engine */
+    $config = \Drupal::config('lab_migration.settings');
+    $from = $config->get('lab_migration_from_email') ?: \Drupal::config('system.site')->get('mail');
+    $bcc  = $config->get('lab_migration_emails');
+    $cc   = $config->get('lab_migration_cc_emails');
+    $langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+    $mailManager = \Drupal::service('plugin.manager.mail');
+
+    $params['solution_proposal_received'] = [
+      'proposal_id' => $proposal_id,
+      'user_id' => $user->id(),
+      'headers' => [
+        'From' => $from,
+        'MIME-Version' => '1.0',
+        'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+        'Content-Transfer-Encoding' => '8Bit',
+        'X-Mailer' => 'Drupal',
+        'Cc' => $cc,
+        'Bcc' => $bcc,
+      ],
     ];
 
-    $result = \Drupal::database()->query($query, $args);
-    \Drupal::messenger()->addmessage("We have received your application. We will get back to you soon.", 'status');
-     /* sending email */
-    $email_to = $user->getEmail();
+    // Mail block 1
+    $mailManager->mail('lab_migration', 'solution_proposal_received', $user->getEmail(), $langcode, $params, $from, TRUE);
 
-/* Config */
-$config = \Drupal::config('lab_migration.settings');
+    // Mail block 2
+    if (!empty($bcc)) {
+      $mailManager->mail('lab_migration', 'solution_proposal_received', $bcc, $langcode, $params, $from, TRUE);
+    }
 
-$from = $config->get('lab_migration_from_email');
-$bcc  = $config->get('lab_migration_emails');
-$cc   = $config->get('lab_migration_cc_emails');
-
-/* Mandatory fallback */
-if (empty($from)) {
-  $from = \Drupal::config('system.site')->get('mail');
-}
-
-/* Params */
-$params['solution_proposal_received'] = [
-  'proposal_id' => $proposal_id,
-  'user_id' => $user->id(),
-  'headers' => [
-    'From' => $from,
-    'MIME-Version' => '1.0',
-    'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
-    'Content-Transfer-Encoding' => '8Bit',
-    'X-Mailer' => 'Drupal',
-    'Cc' => $cc,
-    'Bcc' => $bcc,
-  ],
-];
-
-/* Language */
-$langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
-
-/* Send mail */
-$mailManager = \Drupal::service('plugin.manager.mail');
-
-$result = $mailManager->mail(
-  'lab_migration',
-  'solution_proposal_received',
-  $email_to,
-  $langcode,
-  $params,
-  $from,
-  TRUE
-);
-
-if (empty($result['result'])) {
-  \Drupal::messenger()->addError('Error sending email message.');
-}
-else {
-  \Drupal::messenger()->addStatus('Email sent successfully.');
-}
-
-    /* Sending email */
-
-$email_to = $config->get('lab_migration_emails');
-
-$from = $config->get('lab_migration_from_email');
-
-/* Fallback if from is empty */
-if (empty($from)) {
-  $from = \Drupal::config('system.site')->get('mail');
-}
-
-/* Language */
-$langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
-
-/* Send mail */
-$mailManager = \Drupal::service('plugin.manager.mail');
-
-$result = $mailManager->mail(
-  'lab_migration',
-  'solution_proposal_received',
-  $email_to,
-  $langcode,
-  $param,
-  $from,
-  TRUE
-);
-
-if (empty($result['result'])) {
-  \Drupal::messenger()->addError('Error sending email message.');
-}
-$response = new RedirectResponse('<front>');
-    $response->send();
+    // Dynamic clean redirection layout
+    $form_state->setRedirect('<front>');
   }
 
-
-
 }
-?>

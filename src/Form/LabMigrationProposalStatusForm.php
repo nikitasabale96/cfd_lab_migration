@@ -122,11 +122,6 @@ $form['email_id'] = [
     // ];
     
   
-    $form['syllabus_link'] = [
-      '#type' => 'item',
-      '#markup' => $proposal_data->syllabus_link,
-      '#title' => t('Syllabus Link'),
-    ];
     $form['lab_title'] = [
       '#type' => 'item',
       '#markup' => $proposal_data->lab_title,

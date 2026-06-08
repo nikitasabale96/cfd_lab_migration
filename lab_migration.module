@@ -111,8 +111,8 @@ Best Wishes,
 @site_name Team,
 FOSSEE, IIT Bombay',
     [
-      '!user_name' => $user->getDisplayName(),
-      '!site_name' => $site_name,
+      '@user_name' => $user->getDisplayName(),
+      '@site_name' => $site_name,
       '@full_name' => $proposal_data->name_title . ' ' . $proposal_data->name,
       '@email' => $user->getEmail(),
       '@contact' => $proposal_data->contact_ph,
@@ -394,14 +394,14 @@ Solution number: ' . $solution_data->code_number . '
 Caption: ' . $solution_data->caption . '
 
 Please ensure that ALL the codes follow guidelines at
-https://r.fossee.in/lab-migration/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name' => $site_name,
-    '!user_name' => $user_data->getDisplayName(),
+    '@user_name' => $user_data->getDisplayName(),
   ]);
 
   break;
@@ -446,7 +446,7 @@ Best Wishes,
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name' => $site_name,
-    '!user_name' => $user_data->getDisplayName(),
+    '@user_name' => $user_data->getDisplayName(),
   ]);
 
   break;
@@ -492,7 +492,7 @@ Best Wishes,
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name' => $site_name,
-    '!user_name' => $user_data->getDisplayName(),
+    '@user_name' => $user_data->getDisplayName(),
   ]);
 
   break;
@@ -518,20 +518,20 @@ case 'dependency_uploaded':
 
   /* Body */
   $message['body'][] = t('
-Dear !user_name,
+Dear @user_name,
 
 You have uploaded following dependency files:
 ' . $dependency_files . '
 
 Please ensure that ALL the codes follow guidelines at
-https://r.fossee.in/lab-migration/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
 @site_name Team,
 FOSSEE, IIT Bombay', [
     '@site_name' => $site_name,
-    '!user_name' => $user_data->getDisplayName(),
+    '@user_name' => $user_data->getDisplayName(),
   ]);
 
   break;
@@ -658,9 +658,94 @@ FOSSEE, IIT Bombay",
 
 break;
 
+// case 'solution_proposal_received':
+
+//   /* Load proposal */
+//   $proposal_data = \Drupal::database()
+//     ->select('lab_migration_proposal', 'p')
+//     ->fields('p')
+//     ->condition('id', $params['solution_proposal_received']['proposal_id'])
+//     ->range(0, 1)
+//     ->execute()
+//     ->fetchObject();
+
+//   /* Load experiments */
+//   $experiment_q = \Drupal::database()
+//     ->select('lab_migration_experiment', 'e')
+//     ->fields('e')
+//     ->condition('proposal_id', $params['solution_proposal_received']['proposal_id'])
+//     ->orderBy('number', 'ASC')
+//     ->execute();
+
+//   $experiment_list = '';
+//   while ($experiment_data = $experiment_q->fetchObject()) {
+//     $experiment_list .= $experiment_data->number . ') ' .
+//       $experiment_data->title .
+//       ' — ' . $experiment_data->description . "\n";
+//   }
+
+//   /* Load user */
+//   $user_data = User::load($params['solution_proposal_received']['user_id']);
+
+//   /* Site name */
+//   $site_name = \Drupal::config('system.site')->get('name');
+
+//   /* Headers */
+//   $headers = $params['solution_proposal_received']['headers'] ?? [];
+
+//   // Prevent PhpMail fatal error
+//   if (isset($headers['Cc']) && is_array($headers['Cc'])) {
+//     $headers['Cc'] = implode(',', $headers['Cc']);
+//   }
+//   if (isset($headers['Bcc']) && is_array($headers['Bcc'])) {
+//     $headers['Bcc'] = implode(',', $headers['Bcc']);
+//   }
+
+//   $message['headers'] = $headers;
+
+//   /* Subject */
+//   $message['subject'] = t('[@site] Your Lab migration solution proposal has been received', [
+//     '@site' => $site_name,
+//   ]);
+
+//   /* Body */
+//   $message['body'][] = t('
+// Dear @provider,
+
+// We have received your proposal for providing solution for lab migration with the following details:
+
+// List of experiments:
+// @experiments
+
+// Full Name: @fullname
+// Email: @email
+// Contact No.: @phone
+// Department/Branch: @department
+// University/Institute: @university
+
+// Your proposal is under review. You will soon receive an email when the same has been approved / disapproved.
+
+// Please ensure that ALL the codes follow guidelines at:
+// https://cfd.fossee.in/lab-migration/lab-migration-guidelines
+
+// Best Wishes,
+
+// @site_name Team
+// FOSSEE, IIT Bombay', [
+//     '@site_name'  => $site_name,
+//     '@provider'  => $proposal_data->solution_provider_name,
+//     '@experiments' => $experiment_list,
+//     '@fullname'  => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
+//     '@email'     => $user_data?->getEmail() ?? '',
+//     '@phone'     => $proposal_data->solution_provider_contact_ph,
+//     '@department'=> $proposal_data->department,
+//     '@university'=> $proposal_data->solution_provider_university,
+//   ]);
+
+//   break;
 case 'solution_proposal_received':
 
-  /* Load proposal */
+  /* Load proposal safely */
   $proposal_data = \Drupal::database()
     ->select('lab_migration_proposal', 'p')
     ->fields('p')
@@ -669,7 +754,7 @@ case 'solution_proposal_received':
     ->execute()
     ->fetchObject();
 
-  /* Load experiments */
+  /* Load experiments list cleanly */
   $experiment_q = \Drupal::database()
     ->select('lab_migration_experiment', 'e')
     ->fields('e')
@@ -684,16 +769,15 @@ case 'solution_proposal_received':
       ' — ' . $experiment_data->description . "\n";
   }
 
-  /* Load user */
-  $user_data = User::load($params['solution_proposal_received']['user_id']);
+  /* Load user entity using explicit FQCN to prevent missing class namespace errors */
+  $user_data = \Drupal\user\Entity\User::load($params['solution_proposal_received']['user_id']);
 
-  /* Site name */
+  /* Site configuration details */
   $site_name = \Drupal::config('system.site')->get('name');
 
-  /* Headers */
+  /* Handle system Headers cleanly */
   $headers = $params['solution_proposal_received']['headers'] ?? [];
 
-  // Prevent PhpMail fatal error
   if (isset($headers['Cc']) && is_array($headers['Cc'])) {
     $headers['Cc'] = implode(',', $headers['Cc']);
   }
@@ -703,13 +787,13 @@ case 'solution_proposal_received':
 
   $message['headers'] = $headers;
 
-  /* Subject */
+  /* Setup dynamic subject line */
   $message['subject'] = t('[@site] Your Lab migration solution proposal has been received', [
     '@site' => $site_name,
   ]);
 
-  /* Body */
-  $message['body'][] = t('
+  /* Build body layout structure with validated fallback values */
+  $message['body'][] = t("
 Dear @provider,
 
 We have received your proposal for providing solution for lab migration with the following details:
@@ -731,15 +815,17 @@ https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 Best Wishes,
 
 @site_name Team
-FOSSEE, IIT Bombay', [
+FOSSEE, IIT Bombay", [
     '@site_name'  => $site_name,
-    '@provider'  => $proposal_data->solution_provider_name,
-    '@experiments' => $experiment_list,
-    '@fullname'  => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
-    '@email'     => $user_data?->getEmail() ?? '',
-    '@phone'     => $proposal_data->solution_provider_contact_ph,
-    '@department'=> $proposal_data->department,
-    '@university'=> $proposal_data->solution_provider_university,
+    // FIXED: Ensured fallback is handled if data isn't instantly available in the read query
+    '@provider'   => !empty($proposal_data->solution_provider_name) ? $proposal_data->solution_provider_name : $user_data->getDisplayName(),
+    '@experiments'=> !empty($experiment_list) ? $experiment_list : t('No experiments specified.'),
+    '@fullname'   => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
+    '@email'      => $user_data?->getEmail() ?? '',
+    '@phone'      => $proposal_data->solution_provider_contact_ph,
+    // FIXED: Changed column mapping from ->department to ->solution_provider_department
+    '@department' => $proposal_data->solution_provider_department,
+    '@university' => $proposal_data->solution_provider_university,
   ]);
 
   break;
@@ -798,38 +884,38 @@ case 'solution_proposal_approved':
 
   /* Body */
   $message['body'][] = t('
-Dear !name,
+Dear @name,
 
 Congratulations! Your proposal for lab migration with the following details has been approved:
 
-Full Name: !fullname
-Email: !email
-Contact No.: !phone
-Department/Branch: !department
-University/Institute: !university
-City: !city
-State: !state
+Full Name: @fullname
+Email: @email
+Contact No.: @phone
+Department/Branch: @department
+University/Institute: @university
+City: @city
+State: @state
 
 List of experiments:
-!experiments
+@experiments
 
 Please ensure that ALL the codes follow guidelines at:
-https://r.fossee.in/lab-migration/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name'   => $site_name,
-    '!name'        => $proposal_data->solution_provider_name,
-    '!fullname'    => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
-    '!email'       => $user_data?->getEmail() ?? '',
-    '!phone'       => $proposal_data->solution_provider_contact_ph,
-    '!department'  => $proposal_data->solution_provider_department,
-    '!university'  => $proposal_data->solution_provider_university,
-    '!city'        => $proposal_data->solution_provider_city,
-    '!state'       => $proposal_data->solution_provider_state,
-    '!experiments' => $experiment_list,
+    '@name'        => $proposal_data->solution_provider_name,
+    '@fullname'    => $proposal_data->solution_provider_name_title . ' ' . $proposal_data->solution_provider_name,
+    '@email'       => $user_data?->getEmail() ?? '',
+    '@phone'       => $proposal_data->solution_provider_contact_ph,
+    '@department'  => $proposal_data->solution_provider_department,
+    '@university'  => $proposal_data->solution_provider_university,
+    '@city'        => $proposal_data->solution_provider_city,
+    '@state'       => $proposal_data->solution_provider_state,
+    '@experiments' => $experiment_list,
   ]);
 
   break;
@@ -890,17 +976,17 @@ case 'solution_proposal_disapproved':
 
   /* Body */
   $message['body'][] = t('
-Dear !name,
+Dear @name,
 
 We regret to inform you that your Lab migration solution proposal has been disapproved.
 
-Title of Lab: !lab
+Title of Lab: @lab
 
 List of experiments:
-!experiments
+@experiments
 
 Reason:
-!reason
+@reason
 
 You are welcome to submit a new proposal.
 
@@ -909,10 +995,10 @@ Best Wishes,
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name'   => $site_name,
-    '!name'        => $proposal_data->name,
-    '!lab'         => $proposal_data->lab_title,
-    '!experiments' => $experiment_list,
-    '!reason'      => $params['solution_proposal_disapproved']['message'],
+    '@name'        => $proposal_data->name,
+    '@lab'         => $proposal_data->lab_title,
+    '@experiments' => $experiment_list,
+    '@reason'      => $params['solution_proposal_disapproved']['message'],
   ]);
 
   break;
@@ -920,9 +1006,122 @@ FOSSEE, IIT Bombay', [
 
 
 
-   case 'proposal_completed':
+//    case 'proposal_completed':
+
+//   $database = \Drupal::database();
+
+//   /* Load proposal */
+//   $proposal_data = $database->select('lab_migration_proposal', 'p')
+//     ->fields('p')
+//     ->condition('id', $params['proposal_completed']['proposal_id'])
+//     ->range(0, 1)
+//     ->execute()
+//     ->fetchObject();
+// //var_dump($params['proposal_completed']['proposal_id']);die;
+//   if (!$proposal_data) {
+//     break;
+//   }
+
+//   /* Solution provider */
+//   if ($proposal_data->solution_provider_uid == 0) {
+//     $solution_provider_user = 'Open';
+//   }
+//   elseif ($proposal_data->solution_provider_uid == $proposal_data->uid) {
+//     $solution_provider_user = 'Proposer';
+//   }
+//   else {
+//     $solution_provider = \Drupal\user\Entity\User::load($proposal_data->solution_provider_uid);
+//     $solution_provider_user = $solution_provider
+//       ? $solution_provider->getDisplayName()
+//       : 'Unknown';
+//   }
+
+//   /* Load experiments */
+//   $experiment_q = $database->select('lab_migration_experiment', 'e')
+//     ->fields('e')
+//     ->condition('proposal_id', $params['proposal_id'])
+//     ->orderBy('number', 'ASC')
+//     ->execute();
+
+//   $experiment_list = '';
+//   foreach ($experiment_q as $experiment_data) {
+//     $experiment_list .=
+//       $experiment_data->number . ') ' .
+//       $experiment_data->title . PHP_EOL .
+//       'Description: ' . $experiment_data->description . PHP_EOL . PHP_EOL;
+//   }
+
+//   /* Load user */
+//   $user_data = \Drupal\user\Entity\User::load($params['user_id']);
+//   $user_email = $user_data?->getEmail() ?: '';
+//   $user_name  = $user_data?->getDisplayName() ?: 'User';
+
+//   /* Site name */
+//   $site_name = \Drupal::config('system.site')->get('name');
+
+//   /* Subject */
+//   $message['subject'] = t('@site Congratulations on completion of the Lab migration', [
+//     '@site' => $site_name,
+//   ]);
+//   //var_dump($message['subject']);die;
+
+//   /* Body */
+//   $message['body'][] = t('Dear @name,', ['@name' => $user_name]);
+//   $message['body'][] = '';
+//   $message['body'][] = t('Following Lab migration has been completed successfully:');
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Full Name: @name', [
+//     '@name' => $proposal_data->name_title . ' ' . $proposal_data->name,
+//   ]);
+//   $message['body'][] = t('Email: @mail', ['@mail' => $user_email]);
+//   $message['body'][] = t('Contact No.: @contact', ['@contact' => $proposal_data->contact_ph]);
+//   $message['body'][] = t('Department: @dept', ['@dept' => $proposal_data->department]);
+//   $message['body'][] = t('University: @uni', ['@uni' => $proposal_data->university]);
+//   $message['body'][] = t('City: @city', ['@city' => $proposal_data->city]);
+//   $message['body'][] = t('State: @state', ['@state' => $proposal_data->state]);
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Solution Provided By: @provider', [
+//     '@provider' => $solution_provider_user,
+//   ]);
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('List of experiments:');
+//   $message['body'][] = $experiment_list;
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Your Lab solution is now available at the following link:');
+//   $message['body'][] = 'https://cfd.fossee.in/lab-migration/lab-migration-run/' . $proposal_data->id;
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Now you should be able to propose a new Lab migration.');
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Please ensure that ALL the codes follow the guidelines:');
+//   $message['body'][] = 'https://cfd.fossee.in/lab-migration-project/lab-migration-guidelines';
+//   $message['body'][] = '';
+
+//   $message['body'][] = t('Best Wishes,');
+//   $message['body'][] = $site_name . ' Team';
+//   $message['body'][] = 'FOSSEE, IIT Bombay';
+
+//   /* Headers */
+//   if (!empty($params['headers'])) {
+//     foreach ($params['headers'] as $k => $v) {
+//       if (!empty($v)) {
+//         $message['headers'][$k] = $v;
+//       }
+//     }
+//   }
+
+//   break;
+
+  case 'proposal_completed':
 
   $database = \Drupal::database();
+
+  // FIX 1: Removed the destructive var_dump() die; line completely.
 
   /* Load proposal */
   $proposal_data = $database->select('lab_migration_proposal', 'p')
@@ -931,12 +1130,12 @@ FOSSEE, IIT Bombay', [
     ->range(0, 1)
     ->execute()
     ->fetchObject();
-//var_dump($params['proposal_completed']['proposal_id']);die;
+
   if (!$proposal_data) {
     break;
   }
 
-  /* Solution provider */
+  /* Solution provider evaluation */
   if ($proposal_data->solution_provider_uid == 0) {
     $solution_provider_user = 'Open';
   }
@@ -951,14 +1150,15 @@ FOSSEE, IIT Bombay', [
   }
 
   /* Load experiments */
+  // FIX 2: Corrected parameter path from $params['proposal_id'] to $params['proposal_completed']['proposal_id']
   $experiment_q = $database->select('lab_migration_experiment', 'e')
     ->fields('e')
-    ->condition('proposal_id', $params['proposal_id'])
+    ->condition('proposal_id', $params['proposal_completed']['proposal_id'])
     ->orderBy('number', 'ASC')
     ->execute();
 
   $experiment_list = '';
-  foreach ($experiment_q as $experiment_data) {
+  while ($experiment_data = $experiment_q->fetchObject()) {
     $experiment_list .=
       $experiment_data->number . ') ' .
       $experiment_data->title . PHP_EOL .
@@ -966,7 +1166,8 @@ FOSSEE, IIT Bombay', [
   }
 
   /* Load user */
-  $user_data = \Drupal\user\Entity\User::load($params['user_id']);
+  // FIX 3: Corrected parameter path from $params['user_id'] to $params['proposal_completed']['user_id']
+  $user_data = \Drupal\user\Entity\User::load($params['proposal_completed']['user_id']);
   $user_email = $user_data?->getEmail() ?: '';
   $user_name  = $user_data?->getDisplayName() ?: 'User';
 
@@ -977,10 +1178,10 @@ FOSSEE, IIT Bombay', [
   $message['subject'] = t('@site Congratulations on completion of the Lab migration', [
     '@site' => $site_name,
   ]);
-  //var_dump($message['subject']);die;
 
-  /* Body */
-  $message['body'][] = t('Dear @name,', ['@name' => $user_name]);
+  /* Body Assembly */
+  $message['body'][] = t('Dear  @provider,
+,', ['@provider' => $solution_provider_user]);
   $message['body'][] = '';
   $message['body'][] = t('Following Lab migration has been completed successfully:');
   $message['body'][] = '';
@@ -1002,7 +1203,7 @@ FOSSEE, IIT Bombay', [
   $message['body'][] = '';
 
   $message['body'][] = t('List of experiments:');
-  $message['body'][] = $experiment_list;
+  $message['body'][] = !empty($experiment_list) ? $experiment_list : t('No experiments specified.') . PHP_EOL;
   $message['body'][] = '';
 
   $message['body'][] = t('Your Lab solution is now available at the following link:');
@@ -1021,8 +1222,9 @@ FOSSEE, IIT Bombay', [
   $message['body'][] = 'FOSSEE, IIT Bombay';
 
   /* Headers */
-  if (!empty($params['headers'])) {
-    foreach ($params['headers'] as $k => $v) {
+  // FIX 4: Corrected parameter path from $params['headers'] to $params['proposal_completed']['headers']
+  if (!empty($params['proposal_completed']['headers'])) {
+    foreach ($params['proposal_completed']['headers'] as $k => $v) {
       if (!empty($v)) {
         $message['headers'][$k] = $v;
       }
@@ -1030,8 +1232,6 @@ FOSSEE, IIT Bombay', [
   }
 
   break;
-
-  
 
   case 'solution_pending':
 
@@ -1084,14 +1284,14 @@ Solution number: ' . $solution_data->code_number . '
 Caption: ' . $solution_data->caption . '
 
 Please ensure that ALL the codes follow guidelines at
-https://r.fossee.in/lab-migration/lab-migration-guidelines
+https://cfd.fossee.in/lab-migration/lab-migration-guidelines
 
 Best Wishes,
 
 @site_name Team
 FOSSEE, IIT Bombay', [
     '@site_name' => $site_name,
-    '!user_name' => $user_data->getDisplayName(),
+    '@user_name' => $user_data->getDisplayName(),
   ]);
 
   break;
