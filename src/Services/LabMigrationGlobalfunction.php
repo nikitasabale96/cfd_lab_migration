@@ -748,7 +748,7 @@ $lab_id = (int) $route_match->getParameter('lab_id');
   );*/
  }
 
- function lab_migration_delete_solution($solution_id)
+ public function lab_migration_delete_solution($solution_id)
 {
     global $user;
     $root_path = \Drupal::service("lab_migration_global")->lab_migration_path();

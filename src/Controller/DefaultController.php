@@ -845,7 +845,7 @@ public function lab_migration_list_experiments() {
   return $return_html;
 }
 
-   public function lab_migration_upload_code_delete() {
+  public function lab_migration_upload_code_delete() {
     $user = \Drupal::currentUser();
     
     $route_match = \Drupal::routeMatch();
